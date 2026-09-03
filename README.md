@@ -84,7 +84,7 @@ dependencyResolutionManagement {
 ```
 
 Without it, the build fails to resolve
-`com.github.barikoi:barikoitrace:0.4.0`. The first build of a tag is compiled
+`com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0`. The first build of a tag is compiled
 by JitPack on demand and takes a few minutes; later builds come from its cache.
 
 ### iOS — Swift Package Manager, or a podspec you supply
@@ -793,7 +793,7 @@ See [`example/README.md`](example/README.md).
 | | |
 |---|---|
 | Plugin | `0.1.0` |
-| Android SDK | `com.github.barikoi:barikoitrace:0.4.0` |
+| Android SDK | `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0` |
 | iOS SDK | `BarikoiTrace` Swift package `0.4.0` |
 
 The two native SDKs are released **in lockstep on the same version number** —

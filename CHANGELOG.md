@@ -11,7 +11,7 @@ and the package follows [semantic versioning](https://semver.org/) — below
 ## 0.1.0
 
 Initial release. Wraps native SDK **0.4.0** on both platforms
-(`com.github.barikoi:barikoitrace:0.4.0` and the `BarikoiTrace` Swift package
+(`com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0` and the `BarikoiTrace` Swift package
 `0.4.0`), exposed as `BarikoiTrace.nativeSdkVersion`.
 
 ### Added

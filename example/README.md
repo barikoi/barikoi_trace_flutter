@@ -80,6 +80,25 @@ app should ship the MQTT password. See the plugin README's configuration
 section for the alternative — have your own backend issue the broker
 credentials at runtime and pass them to `initialize`.
 
+### Building against a local Android SDK checkout
+
+The plugin resolves `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace`
+from JitPack, which builds a tag the first time anyone asks for it. That first
+request can time out, and a tag that has never been built resolves to nothing.
+
+To bypass JitPack entirely — offline work, or testing an SDK change before
+tagging it — point an env var at your local checkout:
+
+```sh
+export BARIKOI_TRACE_ANDROID_SDK=/Users/you/StudioProjects/BarikoiTrace-android-sdk
+flutter run
+```
+
+`android/settings.gradle` then includes that directory as a composite build and
+substitutes the local `:barikoitrace` project for the published coordinate.
+Nothing else changes — the plugin still declares the real dependency. Unset the
+variable to go back to JitPack.
+
 ---
 
 ## What the screen does
@@ -121,7 +140,7 @@ These files are hand-authored and carry settings a fresh `flutter create` does
 | File | Why it is not the default |
 |---|---|
 | `android/app/build.gradle` | `minSdk 24`, `coreLibraryDesugaringEnabled = true` and the `desugar_jdk_libs` dependency. Desugaring is **not** transitive — the native SDK uses `java.time.LocalTime` at minSdk 24, so the *application* module must desugar too or the app crashes with `NoClassDefFoundError: java.time.LocalTime` the first time a `TraceMode` is built. |
-| `android/build.gradle` | The JitPack repository. `com.github.barikoi:barikoitrace:0.4.0` does not resolve without it. |
+| `android/build.gradle` | The JitPack repository. `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0` does not resolve without it. |
 | `android/settings.gradle` | Kotlin 2.0.21. The native SDK is compiled with Kotlin 2.0, and 1.9.x refuses to read its metadata. |
 | `android/app/src/main/AndroidManifest.xml` | The app's own location, background-location, foreground-service and notification permissions. |
 | `ios/Runner/Info.plist` | The two usage descriptions, `UIBackgroundModes`, `BGTaskSchedulerPermittedIdentifiers`, and the optional `BarikoiTraceApiKey` the plugin reads at launch. |

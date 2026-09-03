@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shown from launch until Flutter renders its first frame. The
+         AndroidManifest references it as android:theme on the activity. -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+
+    <!-- Swapped in by the Flutter embedding once the first frame is up; the
+         manifest points at it through the io.flutter.embedding.android.NormalTheme
+         meta-data. Without it the launch background stays behind the app. -->
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>

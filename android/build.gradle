@@ -2,7 +2,7 @@ group = 'com.barikoi.barikoitrace.flutter'
 version = '0.1.0'
 
 buildscript {
-    // The Barikoi Trace Android SDK (`com.github.barikoi:barikoitrace:0.4.0`) is
+    // The Barikoi Trace Android SDK (`com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0`) is
     // compiled with Kotlin 2.0.21. Kotlin metadata is NOT backwards readable:
     // a 1.9.x compiler refuses a 2.0 class file with "was compiled with a newer
     // version of Kotlin". The host project therefore has to be on Kotlin 2.0+
@@ -23,7 +23,7 @@ buildscript {
 // ---------------------------------------------------------------------------
 // JitPack
 // ---------------------------------------------------------------------------
-// `com.github.barikoi:barikoitrace` is published through JitPack, which no
+// `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace` is published through JitPack, which no
 // stock Flutter app declares. A plugin cannot add a repository to the host's
 // `dependencyResolutionManagement` block from here, so the repository is added
 // to every project instead — including this one, which is what actually makes
@@ -65,7 +65,7 @@ try {
         "build (the project most likely uses RepositoriesMode.FAIL_ON_PROJECT_REPOS). " +
         "Add `maven { url = uri('https://jitpack.io') }` to the repositories block " +
         "in your android/settings.gradle dependencyResolutionManagement instead, " +
-        "or `com.github.barikoi:barikoitrace:0.4.0` will not resolve."
+        "or `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0` will not resolve."
     )
 }
 
@@ -126,7 +126,7 @@ dependencies {
 
     // Pinned to BarikoiTrace.nativeSdkVersion on the Dart side. Bump both
     // together — see docs/WIRE_CONTRACT.md §8.
-    implementation 'com.github.barikoi:barikoitrace:0.4.0'
+    implementation 'com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0'
 
     // The plugin runs every handler on a Main.immediate scope and moves the
     // SDK's suspend/blocking calls onto Dispatchers.IO itself; the SDK declares

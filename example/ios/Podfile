@@ -35,30 +35,36 @@ target 'Runner' do
   # ---------------------------------------------------------------------
   # BarikoiTrace and CocoaPods
   # ---------------------------------------------------------------------
-  # The BarikoiTrace iOS SDK ships as a Swift Package only — its repository
-  # has a Package.swift and no BarikoiTrace.podspec, and nothing is published
-  # to the CocoaPods trunk. The plugin's podspec declares
-  # `s.dependency 'BarikoiTrace', '0.4.0'` all the same, so with plain
-  # CocoaPods `pod install` fails with "Unable to find a specification for
-  # `BarikoiTrace`".
+  # The SDK's primary distribution is Swift Package Manager. The plugin's
+  # podspec declares `s.dependency 'BarikoiTrace', '0.4.0'`, and CocoaPods can
+  # only satisfy that if it is told where the podspec is — nothing is published
+  # to the trunk yet. Without one of the lines below, `pod install` fails with
+  # "Unable to find a specification for `BarikoiTrace`", and the build then
+  # fails later with "Module 'barikoi_trace_flutter' not found", because the
+  # plugin pod never got installed.
   #
-  # The supported configuration is Swift Package Manager:
+  # A host-app declaration takes precedence over the plugin's dependency.
+  #
+  # Local checkout — the iOS counterpart of the Android composite build. Uses
+  # your working tree, so uncommitted SDK changes are picked up:
+  local_sdk = File.expand_path('../../../BarikoiTrace-ios-sdk', __dir__)
+  if File.exist?(File.join(local_sdk, 'BarikoiTrace.podspec'))
+    pod 'BarikoiTrace', :path => local_sdk
+  else
+    # Straight from the repository, no trunk needed. Requires
+    # BarikoiTrace.podspec to be committed and pushed on `main`.
+    pod 'BarikoiTrace',
+        :podspec => 'https://raw.githubusercontent.com/barikoi/BarikoiTrace-ios-sdk/main/BarikoiTrace.podspec'
+  end
+  #
+  # The other supported route is to skip CocoaPods for the SDK entirely:
   #
   #     flutter config --enable-swift-package-manager
   #
-  # (on by default from Flutter 3.44). SPM resolves the SDK through
-  # ios/barikoi_trace_flutter/Package.swift and this Podfile still handles the
-  # rest of the plugins.
-  #
-  # To stay on CocoaPods instead, point at a podspec explicitly — a host-app
-  # declaration takes precedence over the plugin's dependency:
-  #
-  #   pod 'BarikoiTrace',
-  #       :podspec => 'https://raw.githubusercontent.com/barikoi/BarikoiTrace-ios-sdk/0.4.0/BarikoiTrace.podspec'
-  #
-  # Such a podspec must also carry the SDK's own CocoaMQTT dependency
-  # (`s.dependency 'CocoaMQTT', '~> 2.1.6'`) and link libsqlite3, because
-  # Package.swift declares both and a podspec inherits neither.
+  # (on by default from Flutter 3.44). SPM then resolves the SDK through
+  # ios/barikoi_trace_flutter/Package.swift, and this Podfile still handles the
+  # remaining plugins. Delete the `pod 'BarikoiTrace'` lines above if you go
+  # that way, so the same dependency is not satisfied twice.
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end

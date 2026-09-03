@@ -20,7 +20,7 @@ plugins {
     id "dev.flutter.flutter-plugin-loader" version "1.0.0"
     id "com.android.application" version "8.7.0" apply false
     // Kotlin 2.0+ is a floor, not a preference: the native SDK
-    // (com.github.barikoi:barikoitrace:0.4.0) is compiled with 2.0.21, and
+    // (com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0) is compiled with 2.0.21, and
     // Kotlin metadata is not backwards readable — a 1.9.x compiler rejects it
     // with "was compiled with a newer version of Kotlin".
     id "org.jetbrains.kotlin.android" version "2.0.21" apply false
@@ -28,8 +28,34 @@ plugins {
 
 include ":app"
 
+// Opt-in escape hatch: build the native Android SDK from a local checkout
+// instead of resolving it from JitPack. Set the env var to the SDK repo root:
+//
+//   export BARIKOI_TRACE_ANDROID_SDK=/Users/you/StudioProjects/BarikoiTrace-android-sdk
+//   flutter run
+//
+// Useful when JitPack has not built a tag yet, when you are offline, or when
+// you want to test an SDK change before tagging it. Nothing else changes — the
+// plugin keeps declaring the published coordinate, and Gradle substitutes the
+// local project for it. Unset the variable to go back to JitPack.
+def localSdkPath = System.getenv("BARIKOI_TRACE_ANDROID_SDK")
+if (localSdkPath) {
+    def localSdkDir = new File(localSdkPath)
+    if (!localSdkDir.isDirectory()) {
+        throw new GradleException(
+            "BARIKOI_TRACE_ANDROID_SDK points at '$localSdkPath', which is not a directory."
+        )
+    }
+    println "barikoi_trace_flutter: using local Android SDK at ${localSdkDir.canonicalPath}"
+    includeBuild(localSdkDir) {
+        dependencySubstitution {
+            substitute module("com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace") using project(":barikoitrace")
+        }
+    }
+}
+
 // Note: no `dependencyResolutionManagement` block here on purpose. The
 // repositories — JitPack included — are declared in build.gradle's
 // `allprojects` block, which Gradle's default PREFER_PROJECT mode honours. If
 // you move them here instead, JitPack must come with them or
-// `com.github.barikoi:barikoitrace:0.4.0` will not resolve.
+// `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0` will not resolve.
