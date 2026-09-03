@@ -1,0 +1,27 @@
+name: barikoi_trace_flutter
+description: Flutter plugin for the Barikoi Trace location-tracking SDKs (Android and iOS).
+version: 0.1.0
+homepage: https://github.com/barikoi/BarikoiTrace-flutter-plugin
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.1.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.barikoi.barikoitrace.flutter
+        pluginClass: BarikoiTraceFlutterPlugin
+      ios:
+        pluginClass: BarikoiTraceFlutterPlugin

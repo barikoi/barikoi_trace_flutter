@@ -1,0 +1,35 @@
+pluginManagement {
+    def flutterSdkPath = {
+        def properties = new Properties()
+        file("local.properties").withInputStream { properties.load(it) }
+        def flutterSdkPath = properties.getProperty("flutter.sdk")
+        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+        return flutterSdkPath
+    }()
+
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+    id "com.android.application" version "8.7.0" apply false
+    // Kotlin 2.0+ is a floor, not a preference: the native SDK
+    // (com.github.barikoi:barikoitrace:0.4.0) is compiled with 2.0.21, and
+    // Kotlin metadata is not backwards readable — a 1.9.x compiler rejects it
+    // with "was compiled with a newer version of Kotlin".
+    id "org.jetbrains.kotlin.android" version "2.0.21" apply false
+}
+
+include ":app"
+
+// Note: no `dependencyResolutionManagement` block here on purpose. The
+// repositories — JitPack included — are declared in build.gradle's
+// `allprojects` block, which Gradle's default PREFER_PROJECT mode honours. If
+// you move them here instead, JitPack must come with them or
+// `com.github.barikoi:barikoitrace:0.4.0` will not resolve.

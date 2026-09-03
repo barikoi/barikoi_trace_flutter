@@ -1,0 +1,77 @@
+# The BarikoiTrace iOS SDK requires iOS 15. This has to match
+# IPHONEOS_DEPLOYMENT_TARGET in Runner.xcodeproj; Flutter's default template
+# ships a lower value, so do not delete this line.
+platform :ios, '15.0'
+
+# CocoaPods analytics sends network stats synchronously, which slows builds.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. Run flutter pub get first."
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get."
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+
+  # ---------------------------------------------------------------------
+  # BarikoiTrace and CocoaPods
+  # ---------------------------------------------------------------------
+  # The BarikoiTrace iOS SDK ships as a Swift Package only — its repository
+  # has a Package.swift and no BarikoiTrace.podspec, and nothing is published
+  # to the CocoaPods trunk. The plugin's podspec declares
+  # `s.dependency 'BarikoiTrace', '0.4.0'` all the same, so with plain
+  # CocoaPods `pod install` fails with "Unable to find a specification for
+  # `BarikoiTrace`".
+  #
+  # The supported configuration is Swift Package Manager:
+  #
+  #     flutter config --enable-swift-package-manager
+  #
+  # (on by default from Flutter 3.44). SPM resolves the SDK through
+  # ios/barikoi_trace_flutter/Package.swift and this Podfile still handles the
+  # rest of the plugins.
+  #
+  # To stay on CocoaPods instead, point at a podspec explicitly — a host-app
+  # declaration takes precedence over the plugin's dependency:
+  #
+  #   pod 'BarikoiTrace',
+  #       :podspec => 'https://raw.githubusercontent.com/barikoi/BarikoiTrace-ios-sdk/0.4.0/BarikoiTrace.podspec'
+  #
+  # Such a podspec must also carry the SDK's own CocoaMQTT dependency
+  # (`s.dependency 'CocoaMQTT', '~> 2.1.6'`) and link libsqlite3, because
+  # Package.swift declares both and a podspec inherits neither.
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+
+    target.build_configurations.each do |config|
+      # flutter_additional_ios_build_settings floors this at Flutter's minimum,
+      # which is below the SDK's. Raise every pod to 15.0 so the build does not
+      # fail on "compiling for iOS 12.0, but module was built for iOS 15.0".
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+    end
+  end
+end

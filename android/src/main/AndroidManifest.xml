@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Deliberately empty.
+
+    The package/namespace is declared in build.gradle (`namespace`); AGP 8 fails
+    the build outright if it is also set here via the `package` attribute
+    ("Setting the namespace via the package attribute in the source
+    AndroidManifest.xml is no longer supported").
+
+    Every permission, service and receiver the tracker needs is declared by the
+    native SDK's own manifest (INTERNET, ACCESS_NETWORK_STATE,
+    ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION,
+    FOREGROUND_SERVICE, FOREGROUND_SERVICE_LOCATION, FOREGROUND_SERVICE_DATA_SYNC,
+    POST_NOTIFICATIONS, LocTraceForegroundService, LocTraceDataService,
+    BootReceiver) and reaches the host app through manifest merging. Re-declaring
+    them here would only create merge conflicts.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />

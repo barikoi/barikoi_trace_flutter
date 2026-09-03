@@ -1,0 +1,26 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+
+        // The Barikoi Trace Android SDK is published through JitPack, which no
+        // stock Flutter project declares. The plugin's own android/build.gradle
+        // tries to add this to every project in the build, but a host app that
+        // opts into RepositoriesMode.FAIL_ON_PROJECT_REPOS rejects that — so
+        // declaring it here is the explicit, always-correct version.
+        maven { url = 'https://jitpack.io' }
+    }
+}
+
+rootProject.buildDir = '../build'
+
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(':app')
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

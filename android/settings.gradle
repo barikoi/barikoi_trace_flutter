@@ -1,0 +1,5 @@
+// Only used when android/ is opened as a standalone Gradle build (e.g. to let
+// the IDE index the Kotlin sources). In a real app build this directory is
+// included as a subproject by the Flutter tool, and the app's own
+// settings.gradle is the one that matters.
+rootProject.name = 'barikoi_trace_flutter'

@@ -1,0 +1,138 @@
+group = 'com.barikoi.barikoitrace.flutter'
+version = '0.1.0'
+
+buildscript {
+    // The Barikoi Trace Android SDK (`com.github.barikoi:barikoitrace:0.4.0`) is
+    // compiled with Kotlin 2.0.21. Kotlin metadata is NOT backwards readable:
+    // a 1.9.x compiler refuses a 2.0 class file with "was compiled with a newer
+    // version of Kotlin". The host project therefore has to be on Kotlin 2.0+
+    // as well — this is the floor, not a preference.
+    ext.kotlin_version = '2.0.21'
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.7.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+// ---------------------------------------------------------------------------
+// JitPack
+// ---------------------------------------------------------------------------
+// `com.github.barikoi:barikoitrace` is published through JitPack, which no
+// stock Flutter app declares. A plugin cannot add a repository to the host's
+// `dependencyResolutionManagement` block from here, so the repository is added
+// to every project instead — including this one, which is what actually makes
+// the dependency resolve.
+//
+// Host projects that opt into `RepositoriesMode.FAIL_ON_PROJECT_REPOS` (or
+// PREFER_SETTINGS with a strict check) reject project-level repositories at the
+// moment they are added, so the whole thing is guarded: on such a project the
+// add throws, is swallowed here, and the host is told what to do instead.
+//
+// The settings.gradle alternative, for those projects — in the *app's*
+// android/settings.gradle:
+//
+//     dependencyResolutionManagement {
+//         repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+//         repositories {
+//             google()
+//             mavenCentral()
+//             maven { url = uri('https://jitpack.io') }
+//         }
+//     }
+//
+// (Kotlin DSL: `maven { url = uri("https://jitpack.io") }`.)
+def barikoiJitPackRepoName = 'barikoiTraceJitPack'
+try {
+    rootProject.allprojects { targetProject ->
+        targetProject.repositories {
+            if (findByName(barikoiJitPackRepoName) == null) {
+                maven {
+                    name = barikoiJitPackRepoName
+                    url = 'https://jitpack.io'
+                }
+            }
+        }
+    }
+} catch (Exception ignored) {
+    logger.warn(
+        "barikoi_trace_flutter: could not add the JitPack repository to this " +
+        "build (the project most likely uses RepositoriesMode.FAIL_ON_PROJECT_REPOS). " +
+        "Add `maven { url = uri('https://jitpack.io') }` to the repositories block " +
+        "in your android/settings.gradle dependencyResolutionManagement instead, " +
+        "or `com.github.barikoi:barikoitrace:0.4.0` will not resolve."
+    )
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'org.jetbrains.kotlin.android'
+
+android {
+    namespace = 'com.barikoi.barikoitrace.flutter'
+    compileSdk = 35
+
+    compileOptions {
+        // The native SDK models the daily tracking window with
+        // `java.time.LocalTime`, and `TraceMode`'s primary constructor takes it
+        // directly — so this module speaks java.time too, at minSdk 24, which
+        // only works with core library desugaring.
+        //
+        // IMPORTANT for host apps: core library desugaring is not transitive.
+        // The application module has to enable it as well, exactly as the SDK's
+        // own sample app does:
+        //
+        //     android {
+        //         compileOptions {
+        //             coreLibraryDesugaringEnabled true
+        //             sourceCompatibility JavaVersion.VERSION_17
+        //             targetCompatibility JavaVersion.VERSION_17
+        //         }
+        //     }
+        //     dependencies {
+        //         coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+        //     }
+        coreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        // Matches the native SDK's own floor; it cannot go lower.
+        minSdk = 24
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+        test.java.srcDirs += 'src/test/kotlin'
+    }
+
+    lint {
+        // A plugin must not fail a host app's build over its own lint opinions.
+        abortOnError = false
+    }
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    // Pinned to BarikoiTrace.nativeSdkVersion on the Dart side. Bump both
+    // together — see docs/WIRE_CONTRACT.md §8.
+    implementation 'com.github.barikoi:barikoitrace:0.4.0'
+
+    // The plugin runs every handler on a Main.immediate scope and moves the
+    // SDK's suspend/blocking calls onto Dispatchers.IO itself; the SDK declares
+    // coroutines as `implementation`, so it is not on this module's compile
+    // classpath through it.
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+}

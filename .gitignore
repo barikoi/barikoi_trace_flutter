@@ -1,0 +1,74 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+
+# Dart / Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+doc/api/
+pubspec.lock
+
+# `pubspec.lock` is ignored on purpose: this is a published package, not an
+# application. The example app ignores its own lock file too.
+
+# Android
+android/.gradle/
+android/gradlew
+android/gradlew.bat
+android/gradle/wrapper/gradle-wrapper.jar
+android/local.properties
+android/key.properties
+*.jks
+*.keystore
+
+# iOS / macOS
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
+ios/Flutter/ephemeral/
+ios/barikoi_trace_flutter/.build/
+ios/barikoi_trace_flutter/.swiftpm/
+**/*.xcworkspace/xcuserdata/
+**/*.xcodeproj/xcuserdata/
+**/xcuserdata/
+
+# Example app build output
+example/.dart_tool/
+example/build/
+example/android/.gradle/
+example/android/local.properties
+example/ios/Pods/
+example/ios/Podfile.lock
+example/ios/.symlinks/
+example/ios/Flutter/Generated.xcconfig
+example/ios/Flutter/flutter_export_environment.sh
+example/ios/Flutter/ephemeral/
+example/ios/Runner/GeneratedPluginRegistrant.*
+
+# Credentials. Never commit these — rotate anything that ever was.
+*.xcconfig
+secrets.env
+Secrets.swift

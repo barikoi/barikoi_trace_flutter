@@ -1,0 +1,7 @@
+# Reserved for bundled iOS resources.
+#
+# Intentionally empty and intentionally NOT referenced from
+# barikoi_trace_flutter.podspec: CocoaPods fails `pod lib lint` on a resource
+# bundle whose glob matches nothing. When the first real asset lands here, add
+# it to `s.resource_bundles` in the podspec and to `resources:` in
+# barikoi_trace_flutter/Package.swift at the same time.

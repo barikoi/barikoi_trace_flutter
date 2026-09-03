@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Barikoi Trace</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>barikoi_trace_flutter_example</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+
+	<!-- ==================================================================
+	     BarikoiTrace
+	     ================================================================== -->
+
+	<!-- Shown by the "When In Use" prompt. Required, or the prompt never
+	     appears and the app is rejected at review. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This demo shows your live location as the Barikoi Trace SDK reports it.</string>
+
+	<!-- Shown by the "Always" prompt. The copy matters more than it looks:
+	     App Review expects a concrete, user-visible reason for background
+	     location, and generic wording ("for tracing purposes") is a common
+	     rejection cause. Replace this with your own feature's real reason. -->
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This demo keeps reporting your location while it is in the background so a dispatcher can follow the trip you started, even when the app is not open.</string>
+
+	<!-- `location` keeps CoreLocation delivering fixes while backgrounded;
+	     `processing` is what lets BGProcessingTask run the offline flush. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>processing</string>
+	</array>
+
+	<!-- The identifier the SDK registers its offline-flush task under. Missing
+	     this entry makes BGTaskScheduler.register throw at launch. -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.barikoi.trace.offlineflush</string>
+	</array>
+
+	<!-- Optional, and specific to the Flutter plugin. iOS must register its
+	     background tasks before didFinishLaunchingWithOptions returns, so the
+	     plugin initializes the SDK from its AppDelegate hook — long before Dart
+	     can call initialize(). On the very first launch of a fresh install
+	     there is nothing persisted, so without this key that first session runs
+	     without an API key (the plugin logs a WARN saying so) and the key only
+	     takes effect on the next launch. Setting it here makes the first launch
+	     work too.
+
+	     Prefer an xcconfig-backed build setting over a literal:
+	         <string>$(BARIKOI_API_KEY)</string>
+	     Either way this value ships inside the .ipa and is readable by anyone
+	     who unzips it — acceptable for the scoped, rotatable Barikoi API key,
+	     never for the MQTT password, which has no Info.plist equivalent by
+	     design. -->
+	<key>BarikoiTraceApiKey</key>
+	<string>$(BARIKOI_API_KEY)</string>
+</dict>
+</plist>
