@@ -12,8 +12,31 @@ All of it is in [`lib/main.dart`](lib/main.dart).
 
 ## Run it
 
-Credentials are compile-time defines. They are never in source, never in the
-repository, and never in a checked-in properties file:
+Credentials are never in committed source. There are two ways to supply them.
+
+### Option A — `secrets.dart` (local development)
+
+The same arrangement as the iOS SDK's `Examples/BasicUsage/Secrets.swift` and
+the Android sample's `local.properties`. `lib/secrets.dart` is git-ignored;
+`lib/secrets.example.dart` is the committed template:
+
+```sh
+cp lib/secrets.example.dart lib/secrets.dart
+# fill in the real values, then:
+flutter run
+```
+
+`secrets.dart` also carries the optional `mqttUrl` and `baseUrl` — leave them
+`null` to accept the SDK defaults, or point them at staging.
+
+**The app does not compile without `lib/secrets.dart`** (`main.dart` imports
+it), which is deliberate: the same trip-wire the iOS example has, rather than a
+build that succeeds and then fails at the broker.
+
+### Option B — `--dart-define` (CI)
+
+Takes precedence over the file when set, so CI needs no `secrets.dart` beyond
+the copied template:
 
 ```sh
 flutter run \
@@ -22,13 +45,16 @@ flutter run \
   --dart-define=BARIKOI_MQTT_PASSWORD=your_mqtt_password
 ```
 
+`BARIKOI_MQTT_URL` and `BARIKOI_BASE_URL` are also honored.
+
 The API key comes from the Barikoi dashboard. The **MQTT username and password
 are issued separately, per company** — they are not derivable from the API key,
 and they have to match the broker's ACL. A mismatch surfaces as a broker
 refusal (`notAuthorized`), not as an authentication error.
 
-Build without them and the app still starts: it shows a red banner naming the
-missing define instead of failing with an opaque `NO_KEY` from the backend.
+With the template's placeholder values left in place, the app still starts: it
+shows a red banner naming what is missing instead of failing with an opaque
+`NO_KEY` from the backend.
 
 If you would rather not retype them, put them in a git-ignored file and source
 it:

@@ -4,7 +4,16 @@ import 'package:barikoi_trace_flutter/barikoi_trace_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// Credentials are compile-time defines, never source.
+// Git-ignored. Copy `secrets.example.dart` to `secrets.dart` before running.
+import 'secrets.dart';
+
+/// Credentials come from one of two places, never from this file.
+///
+/// 1. **`secrets.dart`** — git-ignored, copied from `secrets.example.dart`.
+///    The local-development path, and the same arrangement the iOS SDK's
+///    `Examples/BasicUsage/Secrets.swift` uses.
+/// 2. **`--dart-define`** — takes precedence when set, so CI can inject
+///    credentials without the file existing:
 ///
 /// ```sh
 /// flutter run \
@@ -14,11 +23,27 @@ import 'package:flutter/material.dart';
 /// ```
 ///
 /// `String.fromEnvironment` is const, so an undefined key is the empty string
-/// rather than a build error — the app says so on screen instead of failing
-/// with an opaque `NO_KEY` from the backend.
-const String kApiKey = String.fromEnvironment('BARIKOI_API_KEY');
-const String kMqttUsername = String.fromEnvironment('BARIKOI_MQTT_USERNAME');
-const String kMqttPassword = String.fromEnvironment('BARIKOI_MQTT_PASSWORD');
+/// rather than a build error — the app falls back to `Secrets`, and says so on
+/// screen if both are empty rather than failing with an opaque `NO_KEY` from
+/// the backend.
+const String _envApiKey = String.fromEnvironment('BARIKOI_API_KEY');
+const String _envMqttUsername = String.fromEnvironment('BARIKOI_MQTT_USERNAME');
+const String _envMqttPassword = String.fromEnvironment('BARIKOI_MQTT_PASSWORD');
+const String _envMqttUrl = String.fromEnvironment('BARIKOI_MQTT_URL');
+const String _envBaseUrl = String.fromEnvironment('BARIKOI_BASE_URL');
+
+/// `--dart-define` wins; `secrets.dart` is the fallback.
+String _pick(String fromEnv, String fromFile) =>
+    fromEnv.isNotEmpty ? fromEnv : fromFile;
+
+String? _pickOptional(String fromEnv, String? fromFile) =>
+    fromEnv.isNotEmpty ? fromEnv : fromFile;
+
+final String kApiKey = _pick(_envApiKey, Secrets.barikoiApiKey);
+final String kMqttUsername = _pick(_envMqttUsername, Secrets.mqttUsername);
+final String kMqttPassword = _pick(_envMqttPassword, Secrets.mqttPassword);
+final String? kMqttUrl = _pickOptional(_envMqttUrl, Secrets.mqttUrl);
+final String? kBaseUrl = _pickOptional(_envBaseUrl, Secrets.baseUrl);
 
 void main() {
   runApp(const TraceDemoApp());
@@ -177,10 +202,14 @@ class _TraceDemoPageState extends State<TraceDemoPage>
     }
 
     try {
-      await BarikoiTrace.initialize(const TraceConfig(
+      await BarikoiTrace.initialize(TraceConfig(
         apiKey: kApiKey,
         mqttUsername: kMqttUsername,
         mqttPassword: kMqttPassword,
+        // Null means "SDK default" — the endpoints are only sent when the
+        // secrets file or a --dart-define actually names one.
+        baseUrl: kBaseUrl,
+        mqttUrl: kMqttUrl,
       ));
 
       // Gates the two event channels. Both default to off natively, so a demo

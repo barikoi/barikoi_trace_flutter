@@ -38,7 +38,10 @@ ios/Runner/GeneratedPluginRegistrant.*
 ios/*.xcworkspace/xcuserdata/
 ios/*.xcodeproj/xcuserdata/
 
-# Credentials — never commit these. They belong in --dart-define, an
-# xcconfig, or your own backend.
+# Credentials — never commit these. `secrets.example.dart` is the committed
+# template; the real file stays local, the same way the iOS SDK keeps
+# Examples/BasicUsage/Secrets.swift and the Android repo keeps
+# local.properties. --dart-define remains the CI path.
+lib/secrets.dart
 *.xcconfig
 secrets.env
