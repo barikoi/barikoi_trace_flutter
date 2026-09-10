@@ -620,44 +620,6 @@ in your `Info.plist`.
 
 ---
 
-## MQTT contract
-
-**Location topic:** `company/{companyId}/{groupId}/{userId}/location`
-**LWT topic:** `device/{userId}/status`, retained, payload `offline`
-**Client ID:** `{prefix}{userId}-{deviceUuid}` — QoS 1 throughout.
-
-Payload:
-
-```json
-{
-  "latitude": 23.8103,
-  "longitude": 90.4125,
-  "altitude": 4.0,
-  "speed": 1.4,
-  "bearing": 275.0,
-  "accuracy": 12.0,
-  "gpx_time": "2026-09-02 11:04:38",
-  "user_id": "…",
-  "company_id": "…",
-  "user_name": "Jane",
-  "trip_id": "…",
-  "trip_status": "active"
-}
-```
-
-`trip_id` / `trip_status` appear only while on a trip; stopping publishes a
-final full payload with `trip_status: "completed"`. `gpx_time` uses one UTC
-string format on every path — live publish, offline insert and offline flush
-alike.
-
-A CONNACK of `notAuthorized`, `badUsernameOrPassword` or `identifierRejected`
-is treated as permanent: the SDK stops retrying, because the same CONNECT will
-be refused every time. Check the credentials, then the broker's client-id ACL —
-Android connects as `AndroidClient-…` and iOS as `iOSClient-…`, so an ACL
-written for one platform refuses the other. `setMqttClientIdPrefix` is the fix.
-
----
-
 ## Error handling
 
 Every failing call throws `TraceException`, carrying the native error code
