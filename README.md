@@ -27,7 +27,6 @@ alive; see [Background execution](#background-execution--read-this-before-shippi
 - [API reference](#api-reference)
 - [Tracking modes](#tracking-modes)
 - [Offline behavior](#offline-behavior)
-- [MQTT contract](#mqtt-contract)
 - [Error handling](#error-handling)
 - [Background execution — read this before shipping](#background-execution--read-this-before-shipping)
 - [Platform differences](#platform-differences)
