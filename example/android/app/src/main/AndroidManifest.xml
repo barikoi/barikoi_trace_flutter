@@ -34,10 +34,17 @@
     <!-- Lets the app show the battery-optimization exemption dialog. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+    <!-- usesCleartextTraffic: the default broker URL is plaintext
+         `tcp://…:1883`. Paho uses raw sockets, which Android's cleartext
+         policy does not block, so this is not what stops MQTT — but the native
+         demo app sets it, and matching it removes one difference when
+         comparing the two. Drop it once the broker is reachable over
+         `ssl://…:8883`. -->
     <application
         android:label="Barikoi Trace"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

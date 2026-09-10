@@ -38,7 +38,23 @@ include ":app"
 // you want to test an SDK change before tagging it. Nothing else changes — the
 // plugin keeps declaring the published coordinate, and Gradle substitutes the
 // local project for it. Unset the variable to go back to JitPack.
+// Two sources, because an environment variable lives only as long as the shell
+// that exported it — a new terminal, or a build started from the IDE, silently
+// falls back to JitPack. `local.properties` is git-ignored and persistent, so
+// it is the one to prefer for day-to-day work.
+//
+//   local.properties:
+//     barikoi.trace.android.sdk=/Users/you/StudioProjects/BarikoiTrace-android-sdk
+//
 def localSdkPath = System.getenv("BARIKOI_TRACE_ANDROID_SDK")
+if (!localSdkPath) {
+    def props = new Properties()
+    def propsFile = new File(settingsDir, "local.properties")
+    if (propsFile.exists()) {
+        propsFile.withInputStream { props.load(it) }
+        localSdkPath = props.getProperty("barikoi.trace.android.sdk")
+    }
+}
 if (localSdkPath) {
     def localSdkDir = new File(localSdkPath)
     if (!localSdkDir.isDirectory()) {
