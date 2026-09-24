@@ -466,25 +466,15 @@ public final class BarikoiTraceFlutterPlugin: NSObject, FlutterPlugin {
             BarikoiTrace.setBaseURL(baseUrl)
         }
 
-        // 3. The API key. `TraceApiClient` reads it once, at
-        //    `TraceManager.shared` construction, and the only public way to
-        //    refresh it is `TraceManager.initialize(apiKey:)` — which is
-        //    exactly the call that must not run twice. So it is persisted for
-        //    the next launch, and the mismatch is reported rather than
-        //    silently ignored.
+        // 3. The API key. Applied live via `BarikoiTrace.setApiKey` (SDK
+        //    0.4.1+), which persists it and swaps the API client's copy without
+        //    re-running `initialize` (whose BGTaskScheduler registration must
+        //    not run twice). Fixes first login after a fresh install: launch
+        //    initialized with no key; this makes the Dart key effective now
+        //    instead of on the next launch.
         let store = TraceDataStore()
-        let persistedKey = store.getApiKey()
-        if persistedKey != apiKey {
-            store.setApiKey(apiKey)
-            logStreamHandler.emit(
-                level: "WARN",
-                tag: "BarikoiTraceFlutterPlugin",
-                message: "The apiKey passed to initialize() differs from the one this process "
-                    + "launched with. It has been persisted and takes effect on the next app "
-                    + "launch; this session keeps using the previous key. (iOS registers its "
-                    + "background tasks during launch, so the SDK cannot be re-initialized "
-                    + "mid-process.)"
-            )
+        if store.getApiKey() != apiKey {
+            BarikoiTrace.setApiKey(apiKey)
         }
 
         isInitialized = true

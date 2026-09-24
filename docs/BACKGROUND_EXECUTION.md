@@ -167,14 +167,12 @@ your Dart `initialize` call. It reconstructs its configuration from what was
 persisted on a previous run.
 
 On the **very first launch of a fresh install** nothing is persisted, so that
-session starts without an API key. Your `initialize` call then persists the key
-and applies what can still be applied (broker credentials, `mqttUrl`, client-id
-prefix, `baseUrl`) — but the API key itself takes effect on the *next* launch,
-and the plugin logs a WARN saying so. The same warning appears whenever the key
-you pass differs from the one the process launched with.
+session starts without an API key. Your `initialize` call then persists and
+applies everything (broker credentials, `mqttUrl`, client-id prefix, `baseUrl`,
+and the API key via `BarikoiTrace.setApiKey`, iOS SDK 0.4.1+), so the first
+session authenticates without a relaunch.
 
-Put the key in `Info.plist` under `BarikoiTraceApiKey` and the first launch
-works too. Android has no equivalent problem: its `initialize` configures the
+`BarikoiTraceApiKey` in `Info.plist` remains an optional launch-time fallback. Android has no equivalent problem: its `initialize` configures the
 SDK in the same call, on every launch.
 
 ---
@@ -276,7 +274,7 @@ can see what actually arrived, before you ship.
 | I3 | `Always` downgraded to "While Using" mid-session | Degraded banner on resume; background delivery stops |
 | I4 | Force-kill, then move 500 m+ | Process relaunches and tracking resumes — this is the `handleLaunch` path. If it does not, check the AppDelegate ordering in §3 |
 | I5 | Force-kill, stay stationary | Does **not** resume. Expected, and not fixable |
-| I6 | Fresh install, no `BarikoiTraceApiKey` in `Info.plist`, first launch | The WARN about the deferred API key on the `logs` stream; authentication works on the second launch |
+| I6 | Fresh install, no `BarikoiTraceApiKey` in `Info.plist`, first launch | Launch-time WARN about no API key; after Dart `initialize` (e.g. at login), authentication works in the same session |
 | I7 | Same, with the `Info.plist` key set | Authentication works on the first launch |
 
 ### Flutter-specific

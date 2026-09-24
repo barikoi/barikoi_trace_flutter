@@ -495,9 +495,11 @@ class BarikoiTraceFlutterPlugin :
      * ```
      *
      * would otherwise race that write, and `setOrCreateUser` starts with
-     * `if (dataStore.getApiKey().isNullOrBlank()) throw NO_KEY`. So: yield to
-     * let the launched coroutine start, then give the disk write a short
-     * settling window. [setOrCreateUser] retries once on NO_KEY as a backstop
+     * `if (dataStore.getApiKey().isNullOrBlank()) throw NO_KEY`. So the key is
+     * applied again via the awaited `BarikoiTrace.setApiKey` (SDK 0.4.1+),
+     * which closes that race outright. The yield + short settling window stay
+     * for the rest of the config (endpoints, broker credentials), which
+     * `initialize` still writes in the background. [setOrCreateUser] retries once on NO_KEY as a backstop
      * for a device slow enough that this was not enough.
      *
      * The mutex makes repeated `initialize` calls (which must be idempotent,
@@ -528,6 +530,11 @@ class BarikoiTraceFlutterPlugin :
             // Logs config.warnings through BarikoiTrace.notifyLog on the way in,
             // which is how they reach the `logs` event channel.
             BarikoiTrace.initialize(context, config)
+            // initialize() writes the key in the background; setApiKey
+            // suspends until it is persisted and live, so the API key is
+            // deterministic rather than relying on the settle window below.
+            // Same call the iOS plugin makes (SDK 0.4.1+).
+            io { BarikoiTrace.setApiKey(config.apiKey) }
             initializedAtMs = SystemClock.elapsedRealtime()
 
             yield()

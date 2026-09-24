@@ -8,12 +8,12 @@ fixes to disk when the network is gone, flushing them when it returns.
 This package is a **binding, not an implementation**. Tracking runs entirely in
 the native SDKs — [`barikoitrace`](https://github.com/barikoi/BarikoiTrace-android-sdk)
 on Android and [`BarikoiTrace`](https://github.com/barikoi/BarikoiTrace-ios-sdk)
-on iOS, both at `0.4.0` — and Dart drives them over one method channel and two
+on iOS, both at `0.4.1` — and Dart drives them over one method channel and two
 event channels. Nothing about tracking depends on the Flutter engine being
 alive; see [Background execution](#background-execution--read-this-before-shipping).
 
 - **Requirements:** Flutter 3.22+, Dart 3.4+, Android minSdk 24 / compileSdk 35 / Kotlin 2.0+ / Java 8 desugaring, iOS 15+
-- **Wraps:** native SDK `0.4.0` on both platforms (`BarikoiTrace.nativeSdkVersion`)
+- **Wraps:** native SDK `0.4.1` on both platforms (`BarikoiTrace.nativeSdkVersion`)
 - **License:** MIT
 
 ---
@@ -83,7 +83,7 @@ dependencyResolutionManagement {
 ```
 
 Without it, the build fails to resolve
-`com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0`. The first build of a tag is compiled
+`com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.1`. The first build of a tag is compiled
 by JitPack on demand and takes a few minutes; later builds come from its cache.
 
 ### iOS — Swift Package Manager, or a podspec you supply
@@ -100,10 +100,10 @@ flutter config --enable-swift-package-manager
 ```
 
 The plugin's `ios/barikoi_trace_flutter/Package.swift` then declares the SDK
-dependency and resolves `BarikoiTrace` 0.4.0 with no CocoaPods involvement.
+dependency and resolves `BarikoiTrace` 0.4.1 with no CocoaPods involvement.
 
 **On CocoaPods** the plugin's podspec declares
-`s.dependency 'BarikoiTrace', '0.4.0'`, which cannot resolve out of the box —
+`s.dependency 'BarikoiTrace', '0.4.1'`, which cannot resolve out of the box —
 `pod install` fails with *"Unable to find a specification for `BarikoiTrace`"*.
 Until a podspec is published, point at one from your own `ios/Podfile`, where a
 host-app declaration takes precedence:
@@ -112,7 +112,7 @@ host-app declaration takes precedence:
 target 'Runner' do
   use_frameworks!
   pod 'BarikoiTrace',
-      :podspec => 'https://raw.githubusercontent.com/barikoi/BarikoiTrace-ios-sdk/0.4.0/BarikoiTrace.podspec'
+      :podspec => 'https://raw.githubusercontent.com/barikoi/BarikoiTrace-ios-sdk/0.4.1/BarikoiTrace.podspec'
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 ```
@@ -352,17 +352,15 @@ background task is registered, background offline flushing is disabled, and a
 significant-location-change relaunch will not resume tracking. There is no way
 to detect that from Dart — watch the log stream.
 
-**4. The first-launch API-key caveat.** Because the SDK is initialized at
+**4. The API key on first launch.** Because the SDK is initialized at
 launch, it reconstructs its configuration from what was persisted on a previous
 run. On the **very first launch of a fresh install** nothing is persisted, so
-that session starts without an API key. Your Dart `initialize` call then
-persists the key and applies everything that can still be applied
-post-launch — broker credentials, `mqttUrl`, the client-id prefix, `baseUrl` —
-but the API key itself only takes effect on the *next* launch, and the plugin
-logs a WARN saying so. The same warning appears whenever the key passed to
-`initialize` differs from the one the process launched with.
+the SDK starts without an API key. Your Dart `initialize` call then persists
+and applies everything live — broker credentials, `mqttUrl`, the client-id
+prefix, `baseUrl`, and the API key (via the SDK's `setApiKey`, iOS SDK 0.4.1+).
+So calling `initialize` at login works on a fresh install without a relaunch.
 
-To make the first launch work, put the key in `Info.plist`:
+Optionally, put the key in `Info.plist` so it is present from the launch hook:
 
 ```xml
 <key>BarikoiTraceApiKey</key>
@@ -447,12 +445,12 @@ Availability column: ✅ both platforms, ⚠️ behaves differently per platform
 
 | Method | | Notes |
 |---|---|---|
-| `initialize(TraceConfig config)` | ⚠️ | Call once, first. Idempotent. Android configures the SDK in this call; on iOS the SDK was already initialized at launch, so this applies what can still be applied and persists the API key for the next launch — see [Platform setup](#ios). |
+| `initialize(TraceConfig config)` | ⚠️ | Call once, first. Idempotent. Android configures the SDK in this call; on iOS the SDK was already initialized at launch, so this applies the config (API key included) to the running SDK and persists it — see [Platform setup](#ios). |
 | `setBaseUrl(String url)` | ✅ | Destructive natively: clears the cached user and stops tracking when the value changes. |
 | `setMqttUrl(String url)` | ✅ | |
 | `setMqttClientIdPrefix(String prefix)` | ✅ | Call before `startTracking`. On iOS the plugin also persists it, because the SDK keeps it in memory only. |
 | `resetUrls()` | ✅ | Back to the native defaults. |
-| `BarikoiTrace.nativeSdkVersion` | ✅ | `'0.4.0'` — the native version this release is built against. |
+| `BarikoiTrace.nativeSdkVersion` | ✅ | `'0.4.1'` — the native version this release is built against. |
 
 There is no `setLogListener`: the `logs` stream replaces it.
 
@@ -712,7 +710,7 @@ By design, not oversight.
 | Background execution | Persistent foreground service | Bounded wake windows |
 | Resume after force-kill | Boot receiver, any reboot | Significant-location-change only (~500 m) |
 | SDK initialization | In the `initialize` channel call | At app launch, from the plugin's AppDelegate hook — the API key from a Dart `initialize` applies on the *next* launch |
-| First-launch API key | Always works | Needs `BarikoiTraceApiKey` in `Info.plist`, else the first session of a fresh install is unauthenticated |
+| First-launch API key | Always works | Works once Dart `initialize` runs (applied live via `setApiKey`); `BarikoiTraceApiKey` in `Info.plist` optional |
 | `openLocationSettings` | The system Location Services screen | The app's own settings page (iOS has no deep link to the toggle) |
 | `startTracking` preconditions | Pre-checked; throws `NO_USER` / `PERMISSION` | Started; the SDK reports through the log stream |
 | Battery-optimization exemption | Requestable | No equivalent |
@@ -754,8 +752,8 @@ See [`example/README.md`](example/README.md).
 | | |
 |---|---|
 | Plugin | `0.1.0` |
-| Android SDK | `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.0` |
-| iOS SDK | `BarikoiTrace` Swift package `0.4.0` |
+| Android SDK | `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.1` |
+| iOS SDK | `BarikoiTrace` Swift package `0.4.1` |
 
 The two native SDKs are released **in lockstep on the same version number** —
 one number identifies a matched pair, which is what makes a single wrapper

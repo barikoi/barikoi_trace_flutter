@@ -57,13 +57,12 @@ enum PluginPreferences {
 /// | `mqttURL`            | `TraceDataStore.getMqttURL()`, else the SDK default |
 /// | `mqttClientIdPrefix` | `PluginPreferences.mqttClientIdPrefix`, else the SDK default |
 ///
-/// The consequence, and it is unavoidable rather than incidental: on the very
-/// first launch of a fresh install there is nothing persisted, so the SDK
-/// starts this session without credentials. The Dart `initialize` call then
-/// persists them and applies everything that *can* be applied post-launch; the
-/// API key alone waits for the next launch, and the plugin logs a WARN saying
-/// so. Host apps that want a working first launch put their key in
-/// `Info.plist` under `BarikoiTraceApiKey`.
+/// On the very first launch of a fresh install nothing is persisted, so the SDK
+/// starts without credentials. The Dart `initialize` call then persists them
+/// and applies them live — the API key via `BarikoiTrace.setApiKey` (SDK
+/// 0.4.1+) — so the first session works without a relaunch. The
+/// `BarikoiTraceApiKey` Info.plist entry remains an optional launch-time
+/// fallback.
 enum LaunchBootstrap {
 
     /// Info.plist key an integrator can set so the very first launch of a
@@ -121,7 +120,7 @@ enum LaunchBootstrap {
                 tag: "BarikoiTraceFlutterPlugin",
                 message: "No API key available at launch. Nothing is persisted yet and Info.plist "
                     + "carries no '\(apiKeyInfoPlistKey)' entry, so this session starts unauthenticated. "
-                    + "Calling initialize() from Dart stores the key for the next launch."
+                    + "Calling initialize() from Dart applies the key to this session and persists it."
             )
         }
 

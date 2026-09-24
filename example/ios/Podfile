@@ -36,7 +36,7 @@ target 'Runner' do
   # BarikoiTrace and CocoaPods
   # ---------------------------------------------------------------------
   # The SDK's primary distribution is Swift Package Manager. The plugin's
-  # podspec declares `s.dependency 'BarikoiTrace', '0.4.0'`, and CocoaPods can
+  # podspec declares `s.dependency 'BarikoiTrace', '0.4.1'`, and CocoaPods can
   # only satisfy that if it is told where the podspec is — nothing is published
   # to the trunk yet. Without one of the lines below, `pod install` fails with
   # "Unable to find a specification for `BarikoiTrace`", and the build then

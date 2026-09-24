@@ -8,6 +8,25 @@ and the package follows [semantic versioning](https://semver.org/) — below
 
 ---
 
+## Unreleased
+
+### Fixed
+
+- **iOS: first login after a fresh install.** The API key passed to
+  `initialize` from Dart is now applied to the running SDK via
+  `BarikoiTrace.setApiKey` instead of waiting for the next launch.
+  `BarikoiTraceApiKey` in `Info.plist` is no longer needed for this.
+- **Android: `initialize` → `setOrCreateUser` NO_KEY race.** The plugin now
+  awaits `BarikoiTrace.setApiKey` after `initialize`, so the key is persisted
+  before `initialize` returns to Dart instead of relying on a settle delay.
+
+### Changed
+
+- Native SDKs bumped to **0.4.1** on both platforms (new `setApiKey`);
+  `BarikoiTrace.nativeSdkVersion` is `'0.4.1'`.
+
+---
+
 ## 0.1.0
 
 Initial release. Wraps native SDK **0.4.0** on both platforms
