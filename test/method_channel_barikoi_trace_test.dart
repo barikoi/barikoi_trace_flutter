@@ -189,6 +189,31 @@ void main() {
       expect(user.updatedAt.millisecondsSinceEpoch, 1700000000000);
     });
 
+    test('setOrCreateUser ignores deprecated name and email arguments', () async {
+      final TraceUser user = await platform.setOrCreateUser(
+        name: 'Legacy Person',
+        email: 'legacy@example.com',
+        phone: '01700032522',
+      );
+
+      expect(single().method, 'setOrCreateUser');
+      expect(args(), <String, Object?>{
+        'phone': '01700032522',
+      });
+      expect(user.userId, 'u-1');
+    });
+
+    test('getUser decodes sparse payload without throwing', () async {
+      respond = (MethodCall call) => <String, Object?>{
+        'userId': 'sparse-1',
+        'updatedAt': 1700000000000,
+      };
+      final TraceUser? user = await platform.getUser();
+      expect(user?.userId, 'sparse-1');
+      expect(user?.phone, isNull);
+      expect(user?.companyId, isNull);
+    });
+
     test('setOrCreateUser throws NO_DATA when the platform returns null',
         () async {
       respond = (MethodCall call) => null;
