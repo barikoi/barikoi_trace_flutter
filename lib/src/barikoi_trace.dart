@@ -77,11 +77,14 @@ abstract final class BarikoiTrace {
 
   /// Looks up the user by [phone], creating them if they do not exist, and
   /// makes them the tracked user.
+  /// Sets or creates the user associated with this device by phone number.
   ///
   /// Required before tracking: every upload and the MQTT topic are keyed on
   /// the returned user id.
   static Future<TraceUser> setOrCreateUser({
+    @Deprecated('Backend no longer supports name. Parameter is ignored.')
     String? name,
+    @Deprecated('Backend no longer supports email. Parameter is ignored.')
     String? email,
     required String phone,
   }) =>

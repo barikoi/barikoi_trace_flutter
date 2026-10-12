@@ -312,8 +312,6 @@ class BarikoiTraceFlutterPlugin :
 
             "setOrCreateUser" -> {
                 val user = setOrCreateUser(
-                    name = call.argument<String>("name"),
-                    email = call.argument<String>("email"),
                     phone = requireStringArg(call, "phone")
                 )
                 result.success(Codecs.encodeUser(user))
@@ -567,19 +565,19 @@ class BarikoiTraceFlutterPlugin :
     // User
     // ------------------------------------------------------------------
 
-    private suspend fun setOrCreateUser(name: String?, email: String?, phone: String): TraceUser {
+    private suspend fun setOrCreateUser(phone: String): TraceUser {
         // Ordering barrier only: if an initialize is in flight, wait it out.
         initializeMutex.withLock { }
 
         return try {
-            io { BarikoiTrace.setOrCreateUser(name, email, phone) }
+            io { BarikoiTrace.setOrCreateUser(phone) }
         } catch (e: TraceException) {
             if (e.error.code == CODE_NO_KEY && isWithinInitializeWindow()) {
                 // The API-key write from initialize() had not landed yet. One
                 // retry, bounded — never a loop, because a genuinely empty key
                 // must still surface as NO_KEY.
                 delay(NO_KEY_RETRY_DELAY_MS)
-                io { BarikoiTrace.setOrCreateUser(name, email, phone) }
+                io { BarikoiTrace.setOrCreateUser(phone) }
             } else {
                 throw e
             }

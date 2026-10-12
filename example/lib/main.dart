@@ -4,7 +4,6 @@ import 'package:barikoi_trace_flutter/barikoi_trace_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-// Git-ignored. Copy `secrets.example.dart` to `secrets.dart` before running.
 import 'secrets.dart';
 
 /// Credentials come from one of two places, never from this file.
@@ -107,10 +106,11 @@ class _TraceDemoPageState extends State<TraceDemoPage>
 
   // --- Form state ---
 
-  final TextEditingController _name = TextEditingController();
-  final TextEditingController _email = TextEditingController();
+  final TextEditingController _apiKey = TextEditingController(text: kApiKey);
   final TextEditingController _phone =
-      TextEditingController(text: '+8801700000000');
+      TextEditingController(text: '01700032522');
+  bool _apiKeyObscured = false;
+  String? _activeApiKey;
 
   // --- SDK state ---
 
@@ -139,7 +139,7 @@ class _TraceDemoPageState extends State<TraceDemoPage>
   final ScrollController _logScroll = ScrollController();
 
   bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
-  bool get _hasCredentials => kApiKey.isNotEmpty;
+  bool get _hasCredentials => _apiKey.text.trim().isNotEmpty;
 
   // --- Lifecycle ---
 
@@ -147,19 +147,24 @@ class _TraceDemoPageState extends State<TraceDemoPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _apiKey.addListener(_onApiKeyChanged);
     // After the first frame, not during it: `_bootstrap` calls `setState`
     // before its first `await`, and `setState` during `initState` runs inside
     // the build phase, which throws.
     WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_bootstrap()));
   }
 
+  void _onApiKeyChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _apiKey.removeListener(_onApiKeyChanged);
+    _apiKey.dispose();
     unawaited(_locationSubscription?.cancel());
     unawaited(_logSubscription?.cancel());
-    _name.dispose();
-    _email.dispose();
     _phone.dispose();
     _logScroll.dispose();
     super.dispose();
@@ -188,22 +193,34 @@ class _TraceDemoPageState extends State<TraceDemoPage>
       onError: (Object error) => _appendLocalLog('ERROR', 'logs', '$error'),
     );
 
-    if (!_hasCredentials) {
+    final String initialKey = _apiKey.text.trim();
+    if (initialKey.isEmpty) {
       setState(() {
-        _status = 'No BARIKOI_API_KEY --dart-define — see README.md.';
+        _status = 'No API key set — enter an API key above to initialize.';
       });
       _appendLocalLog(
         'WARN',
         'Example',
-        'Built without --dart-define=BARIKOI_API_KEY. Nothing will '
-            'authenticate; every call will fail with NO_KEY.',
+        'Built without an API key. Enter an API key in the input field '
+            'and tap "Initialize SDK" to start.',
       );
       return;
     }
 
-    try {
+    await _initializeWithKey(initialKey);
+  }
+
+  /// Initializes or updates the SDK with a dynamic [key].
+  Future<void> _initializeWithKey(String key) async {
+    final String trimmedKey = key.trim();
+    if (trimmedKey.isEmpty) {
+      _snack('Enter a valid API key.');
+      return;
+    }
+
+    await _run('initialize', () async {
       await BarikoiTrace.initialize(TraceConfig(
-        apiKey: kApiKey,
+        apiKey: trimmedKey,
         mqttUsername: kMqttUsername,
         mqttPassword: kMqttPassword,
         // Null means "SDK default" — the endpoints are only sent when the
@@ -217,7 +234,7 @@ class _TraceDemoPageState extends State<TraceDemoPage>
       await BarikoiTrace.setLoggingEnabled(true);
       await BarikoiTrace.setBroadcastingEnabled(true);
 
-      _locationSubscription = BarikoiTrace.locationUpdates.listen(
+      _locationSubscription ??= BarikoiTrace.locationUpdates.listen(
         _appendFix,
         onError: _onStreamError,
       );
@@ -225,13 +242,23 @@ class _TraceDemoPageState extends State<TraceDemoPage>
       if (!mounted) return;
       setState(() {
         _initialized = true;
+        _activeApiKey = trimmedKey;
         _status = 'Initialized. Native SDK ${BarikoiTrace.nativeSdkVersion}.';
       });
 
+      _appendLocalLog(
+        'INFO',
+        'Example',
+        'Initialized with API key: ${_maskKey(trimmedKey)}',
+      );
+
       await _refreshEverything();
-    } on TraceException catch (e) {
-      _reportError('initialize', e);
-    }
+    });
+  }
+
+  static String _maskKey(String key) {
+    if (key.length <= 8) return '****';
+    return '${key.substring(0, 4)}...${key.substring(key.length - 4)}';
   }
 
   // --- Stream sinks ---
@@ -326,12 +353,8 @@ class _TraceDemoPageState extends State<TraceDemoPage>
         _user = user;
         _tracking = tracking;
         _tripId = tripId;
-        if (user != null) {
-          if (_name.text.isEmpty && user.name != null) _name.text = user.name!;
-          if (_email.text.isEmpty && user.email != null) {
-            _email.text = user.email!;
-          }
-          if (user.phone != null) _phone.text = user.phone!;
+        if (user != null && user.phone != null) {
+          _phone.text = user.phone!;
         }
       });
     } on TraceException catch (e) {
@@ -373,6 +396,17 @@ class _TraceDemoPageState extends State<TraceDemoPage>
   }
 
   Future<void> _signIn() async {
+    final String currentKey = _apiKey.text.trim();
+    if (currentKey.isEmpty) {
+      _snack('Enter an API key first.');
+      return;
+    }
+
+    if (currentKey != _activeApiKey) {
+      await _initializeWithKey(currentKey);
+      if (!_initialized) return;
+    }
+
     final String phone = _phone.text.trim();
     if (phone.isEmpty) {
       _snack('Enter a phone number — it is the identity the backend looks up.');
@@ -381,8 +415,6 @@ class _TraceDemoPageState extends State<TraceDemoPage>
 
     await _run('setOrCreateUser', () async {
       final TraceUser user = await BarikoiTrace.setOrCreateUser(
-        name: _name.text.trim().isEmpty ? null : _name.text.trim(),
-        email: _email.text.trim().isEmpty ? null : _email.text.trim(),
         phone: phone,
       );
       if (!mounted) return;
@@ -563,6 +595,7 @@ class _TraceDemoPageState extends State<TraceDemoPage>
           if (!_hasCredentials) _credentialsBanner(),
           if (_degraded) _degradedBanner(),
           if (_status != null) _statusLine(),
+          _apiKeyCard(),
           _permissionsCard(),
           _signInCard(),
           _trackingCard(),
@@ -578,17 +611,97 @@ class _TraceDemoPageState extends State<TraceDemoPage>
   Widget _credentialsBanner() {
     return Card(
       color: Theme.of(context).colorScheme.errorContainer,
-      child: const Padding(
-        padding: EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Text(
-          'Built without credentials.\n\n'
-          'flutter run \\\n'
-          '  --dart-define=BARIKOI_API_KEY=… \\\n'
-          '  --dart-define=BARIKOI_MQTT_USERNAME=… \\\n'
-          '  --dart-define=BARIKOI_MQTT_PASSWORD=…',
-          style: TextStyle(fontFamily: 'monospace', fontSize: 12),
+          'No API key configured.\n\n'
+          'Enter your Barikoi API key in the field below and tap '
+          '${_initialized ? 'Apply New Key' : 'Initialize SDK'}.',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onErrorContainer,
+            fontFamily: 'monospace',
+            fontSize: 12,
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _apiKeyCard() {
+    final String currentKey = _apiKey.text.trim();
+    final bool isKeyChanged = currentKey != (_activeApiKey ?? '');
+    final bool hasDefaultKey = kApiKey.isNotEmpty;
+
+    return _section(
+      title: '0 · API Key',
+      children: <Widget>[
+        TextField(
+          controller: _apiKey,
+          decoration: InputDecoration(
+            labelText: 'Barikoi API Key',
+            hintText: 'Enter your API key',
+            suffixIcon: IconButton(
+              icon: Icon(
+                _apiKeyObscured ? Icons.visibility_off : Icons.visibility,
+              ),
+              tooltip: _apiKeyObscured ? 'Show key' : 'Hide key',
+              onPressed: () =>
+                  setState(() => _apiKeyObscured = !_apiKeyObscured),
+            ),
+          ),
+          obscureText: _apiKeyObscured,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (String value) {
+            if (!_busy && value.trim().isNotEmpty) {
+              unawaited(_initializeWithKey(value));
+            }
+          },
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: FilledButton.icon(
+                icon: Icon(_initialized && !isKeyChanged
+                    ? Icons.check_circle_outline
+                    : Icons.vpn_key),
+                label: Text(
+                  !_initialized
+                      ? 'Initialize SDK'
+                      : (isKeyChanged ? 'Apply New Key' : 'Key Active'),
+                ),
+                onPressed: !_busy &&
+                        currentKey.isNotEmpty &&
+                        (!_initialized || isKeyChanged)
+                    ? () => unawaited(_initializeWithKey(_apiKey.text))
+                    : null,
+              ),
+            ),
+            if (hasDefaultKey && currentKey != kApiKey) ...<Widget>[
+              const SizedBox(width: 8),
+              OutlinedButton(
+                onPressed: !_busy
+                    ? () {
+                        _apiKey.text = kApiKey;
+                        unawaited(_initializeWithKey(kApiKey));
+                      }
+                    : null,
+                child: const Text('Reset'),
+              ),
+            ],
+          ],
+        ),
+        if (_activeApiKey != null) ...<Widget>[
+          const SizedBox(height: 8),
+          Text(
+            'Active: ${_maskKey(_activeApiKey!)}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.green.shade700,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -714,19 +827,6 @@ class _TraceDemoPageState extends State<TraceDemoPage>
     return _section(
       title: '2 · Sign in',
       children: <Widget>[
-        TextField(
-          controller: _name,
-          decoration: const InputDecoration(labelText: 'Name (optional)'),
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _email,
-          decoration: const InputDecoration(labelText: 'Email (optional)'),
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: 8),
         TextField(
           controller: _phone,
           decoration: const InputDecoration(labelText: 'Phone (required)'),

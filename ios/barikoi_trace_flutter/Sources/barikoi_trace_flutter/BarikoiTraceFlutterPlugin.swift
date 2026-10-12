@@ -205,15 +205,11 @@ public final class BarikoiTraceFlutterPlugin: NSObject, FlutterPlugin {
         // MARK: User
 
         case "setOrCreateUser":
-            let name = Codecs.string(args["name"])
-            let email = Codecs.string(args["email"])
             let phone = Codecs.string(args["phone"]) ?? ""
             let box = ResultBox(result)
             Task {
                 do {
                     let user = try await BarikoiTrace.setOrCreateUser(
-                        name: name,
-                        email: email,
                         phone: phone
                     )
                     box.succeed(Codecs.encodeUser(user))

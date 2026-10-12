@@ -142,8 +142,6 @@ void main() {
     test('decodeUser reads every field and converts epoch ms to UTC', () {
       final TraceUser user = Codecs.decodeUser(<Object?, Object?>{
         'userId': 'u-1',
-        'name': 'Jane',
-        'email': 'jane@example.com',
         'phone': '01700000000',
         'companyId': 'c-1',
         'group': 'riders',
@@ -153,8 +151,6 @@ void main() {
       });
 
       expect(user.userId, 'u-1');
-      expect(user.name, 'Jane');
-      expect(user.email, 'jane@example.com');
       expect(user.phone, '01700000000');
       expect(user.companyId, 'c-1');
       expect(user.group, 'riders');
@@ -168,7 +164,7 @@ void main() {
       final TraceUser user =
           Codecs.decodeUser(<Object?, Object?>{'userId': 'u-2'});
       expect(user.userId, 'u-2');
-      expect(user.name, isNull);
+      expect(user.phone, isNull);
       expect(user.lastLat, 0);
       expect(user.lastLon, 0);
       expect(user.updatedAt.millisecondsSinceEpoch, 0);

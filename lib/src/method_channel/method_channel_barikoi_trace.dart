@@ -101,14 +101,14 @@ class MethodChannelBarikoiTrace extends BarikoiTracePlatform {
 
   @override
   Future<TraceUser> setOrCreateUser({
+    @Deprecated('Backend no longer supports name. Parameter is ignored.')
     String? name,
+    @Deprecated('Backend no longer supports email. Parameter is ignored.')
     String? email,
     required String phone,
   }) async {
     final Map<Object?, Object?>? result =
         await _invoke<Map<Object?, Object?>>('setOrCreateUser', <String, Object?>{
-      'name': name,
-      'email': email,
       'phone': phone,
     });
     if (result == null) {

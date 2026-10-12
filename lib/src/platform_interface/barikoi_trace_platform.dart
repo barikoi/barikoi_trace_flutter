@@ -70,7 +70,9 @@ abstract class BarikoiTracePlatform extends PlatformInterface {
 
   /// See `BarikoiTrace.setOrCreateUser`.
   Future<TraceUser> setOrCreateUser({
+    @Deprecated('Backend no longer supports name. Parameter is ignored.')
     String? name,
+    @Deprecated('Backend no longer supports email. Parameter is ignored.')
     String? email,
     required String phone,
   }) {

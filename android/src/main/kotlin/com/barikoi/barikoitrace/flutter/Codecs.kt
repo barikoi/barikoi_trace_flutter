@@ -171,10 +171,8 @@ internal object Codecs {
 
     /** `updatedAt` is epoch milliseconds — the SDK's Long, passed through. */
     fun encodeUser(user: TraceUser): HashMap<String, Any?> {
-        val map = HashMap<String, Any?>(9)
+        val map = HashMap<String, Any?>(7)
         map["userId"] = user.userId
-        map["name"] = user.name
-        map["email"] = user.email
         map["phone"] = user.phone
         map["companyId"] = user.companyId
         map["group"] = user.group

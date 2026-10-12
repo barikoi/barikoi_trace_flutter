@@ -10,8 +10,6 @@ const EventChannel _logEvents = EventChannel('barikoi_trace_flutter/logs');
 
 const Map<String, Object?> _userMap = <String, Object?>{
   'userId': 'u-1',
-  'name': 'Jane',
-  'email': 'jane@example.com',
   'phone': '01700000000',
   'companyId': 'c-1',
   'group': 'riders',
@@ -177,33 +175,18 @@ void main() {
   });
 
   group('user', () {
-    test('setOrCreateUser sends all three fields and decodes the user',
-        () async {
+    test('setOrCreateUser sends phone and decodes the user', () async {
       final TraceUser user = await platform.setOrCreateUser(
-        name: 'Jane',
-        email: 'jane@example.com',
         phone: '01700000000',
       );
 
       expect(single().method, 'setOrCreateUser');
       expect(args(), <String, Object?>{
-        'name': 'Jane',
-        'email': 'jane@example.com',
         'phone': '01700000000',
       });
       expect(user.userId, 'u-1');
       expect(user.companyId, 'c-1');
       expect(user.updatedAt.millisecondsSinceEpoch, 1700000000000);
-    });
-
-    test('setOrCreateUser sends explicit nulls for the optional fields',
-        () async {
-      await platform.setOrCreateUser(phone: '01700000000');
-      final Map<String, Object?> sent = args();
-      expect(sent.containsKey('name'), isTrue);
-      expect(sent['name'], isNull);
-      expect(sent['email'], isNull);
-      expect(sent['phone'], '01700000000');
     });
 
     test('setOrCreateUser throws NO_DATA when the platform returns null',
