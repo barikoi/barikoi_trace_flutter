@@ -38,6 +38,8 @@ class TraceConfig {
     this.baseUrl,
     this.mqttUrl,
     this.mqttClientIdPrefix,
+    this.notificationTitle,
+    this.notificationContent,
   });
 
   /// Barikoi API key, from the Barikoi dashboard. Used for
@@ -74,6 +76,13 @@ class TraceConfig {
   /// when the broker ACL authorizes by client-id pattern — the symptom is
   /// `notAuthorized` on a CONNECT whose username and password are correct.
   final String? mqttClientIdPrefix;
+
+  /// Foreground notification title (Android) or null to use the application name.
+  final String? notificationTitle;
+
+  /// Foreground notification message/content (Android) or null to keep the
+  /// default ("Trace is running as Background service").
+  final String? notificationContent;
 
   /// The REST base URL both native SDKs default to.
   ///
@@ -156,6 +165,8 @@ class TraceConfig {
     String? baseUrl,
     String? mqttUrl,
     String? mqttClientIdPrefix,
+    String? notificationTitle,
+    String? notificationContent,
   }) {
     return TraceConfig(
       apiKey: apiKey ?? this.apiKey,
@@ -164,6 +175,8 @@ class TraceConfig {
       baseUrl: baseUrl ?? this.baseUrl,
       mqttUrl: mqttUrl ?? this.mqttUrl,
       mqttClientIdPrefix: mqttClientIdPrefix ?? this.mqttClientIdPrefix,
+      notificationTitle: notificationTitle ?? this.notificationTitle,
+      notificationContent: notificationContent ?? this.notificationContent,
     );
   }
 
@@ -178,6 +191,8 @@ class TraceConfig {
         'baseUrl': baseUrl,
         'mqttUrl': mqttUrl,
         'mqttClientIdPrefix': mqttClientIdPrefix,
+        'notificationTitle': notificationTitle,
+        'notificationContent': notificationContent,
       };
 
   /// Redacts the two secrets, so a config is safe to log.
@@ -186,7 +201,9 @@ class TraceConfig {
       'mqttUsername: ${_redact(mqttUsername)}, '
       'mqttPassword: ${_redact(mqttPassword)}, '
       'baseUrl: $baseUrl, mqttUrl: $mqttUrl, '
-      'mqttClientIdPrefix: $mqttClientIdPrefix)';
+      'mqttClientIdPrefix: $mqttClientIdPrefix, '
+      'notificationTitle: $notificationTitle, '
+      'notificationContent: $notificationContent)';
 
   static String _redact(String value) => value.isEmpty ? "''" : '<set>';
 
@@ -199,7 +216,9 @@ class TraceConfig {
           other.mqttPassword == mqttPassword &&
           other.baseUrl == baseUrl &&
           other.mqttUrl == mqttUrl &&
-          other.mqttClientIdPrefix == mqttClientIdPrefix;
+          other.mqttClientIdPrefix == mqttClientIdPrefix &&
+          other.notificationTitle == notificationTitle &&
+          other.notificationContent == notificationContent;
 
   @override
   int get hashCode => Object.hash(
@@ -209,5 +228,7 @@ class TraceConfig {
         baseUrl,
         mqttUrl,
         mqttClientIdPrefix,
+        notificationTitle,
+        notificationContent,
       );
 }

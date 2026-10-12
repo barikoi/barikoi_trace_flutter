@@ -202,6 +202,12 @@ public final class BarikoiTraceFlutterPlugin: NSObject, FlutterPlugin {
             BarikoiTrace.resetURLs()
             result(nil)
 
+        case "setNotificationConfig":
+            let title = Codecs.string(args["title"])
+            let content = Codecs.string(args["content"])
+            BarikoiTrace.setNotificationConfig(title: title, content: content)
+            result(nil)
+
         // MARK: User
 
         case "setOrCreateUser":
@@ -460,6 +466,12 @@ public final class BarikoiTraceFlutterPlugin: NSObject, FlutterPlugin {
             // when the URL matches what `LaunchBootstrap` already applied,
             // which is the normal case.
             BarikoiTrace.setBaseURL(baseUrl)
+        }
+
+        let notificationTitle = Codecs.string(args["notificationTitle"])
+        let notificationContent = Codecs.string(args["notificationContent"])
+        if notificationTitle != nil || notificationContent != nil {
+            BarikoiTrace.setNotificationConfig(title: notificationTitle, content: notificationContent)
         }
 
         // 3. The API key. Applied live via `BarikoiTrace.setApiKey` (SDK

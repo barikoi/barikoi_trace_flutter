@@ -73,6 +73,19 @@ abstract final class BarikoiTrace {
   /// persisted override.
   static Future<void> resetUrls() => _platform.resetUrls();
 
+  /// Configures the notification message and title shown by the background
+  /// tracking service (primarily Android foreground service notification).
+  ///
+  /// If [content] is null, the existing default ("Trace is running as Background
+  /// service") is retained. If [title] is null, the application name is used.
+  /// Can also be specified at SDK startup via [TraceConfig.notificationTitle] and
+  /// [TraceConfig.notificationContent].
+  static Future<void> setNotificationConfig({
+    String? title,
+    String? content,
+  }) =>
+      _platform.setNotificationConfig(title: title, content: content);
+
   // --- User ---
 
   /// Looks up the user by [phone], creating them if they do not exist, and

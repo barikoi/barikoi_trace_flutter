@@ -66,6 +66,13 @@ abstract class BarikoiTracePlatform extends PlatformInterface {
     throw UnimplementedError('resetUrls() has not been implemented.');
   }
 
+  /// See `BarikoiTrace.setNotificationConfig`.
+  Future<void> setNotificationConfig({String? title, String? content}) {
+    throw UnimplementedError(
+      'setNotificationConfig() has not been implemented.',
+    );
+  }
+
   // --- User ---
 
   /// See `BarikoiTrace.setOrCreateUser`.

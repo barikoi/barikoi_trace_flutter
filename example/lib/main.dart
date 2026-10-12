@@ -109,6 +109,8 @@ class _TraceDemoPageState extends State<TraceDemoPage>
   final TextEditingController _apiKey = TextEditingController(text: kApiKey);
   final TextEditingController _phone =
       TextEditingController(text: '01700032522');
+  final TextEditingController _notificationTitle = TextEditingController();
+  final TextEditingController _notificationContent = TextEditingController();
   bool _apiKeyObscured = false;
   String? _activeApiKey;
 
@@ -166,6 +168,8 @@ class _TraceDemoPageState extends State<TraceDemoPage>
     unawaited(_locationSubscription?.cancel());
     unawaited(_logSubscription?.cancel());
     _phone.dispose();
+    _notificationTitle.dispose();
+    _notificationContent.dispose();
     _logScroll.dispose();
     super.dispose();
   }
@@ -227,6 +231,12 @@ class _TraceDemoPageState extends State<TraceDemoPage>
         // secrets file or a --dart-define actually names one.
         baseUrl: kBaseUrl,
         mqttUrl: kMqttUrl,
+        notificationTitle: _notificationTitle.text.trim().isEmpty
+            ? null
+            : _notificationTitle.text.trim(),
+        notificationContent: _notificationContent.text.trim().isEmpty
+            ? null
+            : _notificationContent.text.trim(),
       ));
 
       // Gates the two event channels. Both default to off natively, so a demo
@@ -947,6 +957,46 @@ class _TraceDemoPageState extends State<TraceDemoPage>
     return _section(
       title: 'Android only',
       children: <Widget>[
+        Text(
+          'Foreground Service Notification',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: _notificationTitle,
+          decoration: const InputDecoration(
+            labelText: 'Notification title (optional)',
+            hintText: 'App name if empty',
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _notificationContent,
+          decoration: const InputDecoration(
+            labelText: 'Notification message (optional)',
+            hintText: 'Trace is running as Background service',
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: _initialized && !_busy
+              ? () async {
+                  await _run('setNotificationConfig', () async {
+                    await BarikoiTrace.setNotificationConfig(
+                      title: _notificationTitle.text.trim().isEmpty
+                          ? null
+                          : _notificationTitle.text.trim(),
+                      content: _notificationContent.text.trim().isEmpty
+                          ? null
+                          : _notificationContent.text.trim(),
+                    );
+                    _snack('Notification configuration updated.');
+                  });
+                }
+              : null,
+          child: const Text('Update notification message'),
+        ),
+        const SizedBox(height: 16),
         Text(
           'Doze and OEM autostart managers kill the tracking service even when '
           'every permission is granted. These are the two escape hatches.',

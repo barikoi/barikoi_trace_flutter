@@ -308,6 +308,13 @@ class BarikoiTraceFlutterPlugin :
                 result.success(null)
             }
 
+            "setNotificationConfig" -> {
+                val title = Codecs.asStringOrNull(call.argument<Any>("title"))
+                val content = Codecs.asStringOrNull(call.argument<Any>("content"))
+                BarikoiTrace.setNotificationConfig(title, content)
+                result.success(null)
+            }
+
             // --- User (§3.2) ---
 
             "setOrCreateUser" -> {
@@ -522,7 +529,9 @@ class BarikoiTraceFlutterPlugin :
                 baseUrl = Codecs.asStringOrNull(args["baseUrl"]) ?: defaults.baseUrl,
                 mqttUrl = Codecs.asStringOrNull(args["mqttUrl"]) ?: defaults.mqttUrl,
                 mqttClientIdPrefix = Codecs.asStringOrNull(args["mqttClientIdPrefix"])
-                    ?: defaults.mqttClientIdPrefix
+                    ?: defaults.mqttClientIdPrefix,
+                notificationTitle = Codecs.asStringOrNull(args["notificationTitle"]),
+                notificationContent = Codecs.asStringOrNull(args["notificationContent"])
             )
 
             // Logs config.warnings through BarikoiTrace.notifyLog on the way in,
@@ -911,6 +920,7 @@ class BarikoiTraceFlutterPlugin :
             "setMqttUrl",
             "setMqttClientIdPrefix",
             "resetUrls",
+            "setNotificationConfig",
             "setOrCreateUser",
             "getUser",
             "getUserId",

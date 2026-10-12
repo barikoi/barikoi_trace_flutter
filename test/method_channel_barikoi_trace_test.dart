@@ -129,6 +129,8 @@ void main() {
         'baseUrl': 'https://api.example.com/',
         'mqttUrl': 'ssl://broker.example.com:8883',
         'mqttClientIdPrefix': 'fleet-',
+        'notificationTitle': null,
+        'notificationContent': null,
       });
     });
 
@@ -144,6 +146,8 @@ void main() {
       expect(sent['baseUrl'], isNull);
       expect(sent['mqttUrl'], isNull);
       expect(sent['mqttClientIdPrefix'], isNull);
+      expect(sent['notificationTitle'], isNull);
+      expect(sent['notificationContent'], isNull);
     });
 
     test('setBaseUrl', () async {
@@ -171,6 +175,18 @@ void main() {
       await platform.resetUrls();
       expect(single().method, 'resetUrls');
       expect(single().arguments, isNull);
+    });
+
+    test('setNotificationConfig', () async {
+      await platform.setNotificationConfig(
+        title: 'Custom Title',
+        content: 'Custom Message',
+      );
+      expect(single().method, 'setNotificationConfig');
+      expect(args(), <String, Object?>{
+        'title': 'Custom Title',
+        'content': 'Custom Message',
+      });
     });
   });
 

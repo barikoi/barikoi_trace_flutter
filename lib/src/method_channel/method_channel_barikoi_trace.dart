@@ -97,6 +97,16 @@ class MethodChannelBarikoiTrace extends BarikoiTracePlatform {
   @override
   Future<void> resetUrls() => _invoke<Object>('resetUrls');
 
+  @override
+  Future<void> setNotificationConfig({String? title, String? content}) =>
+      _invoke<Object>(
+        'setNotificationConfig',
+        <String, Object?>{
+          'title': title,
+          'content': content,
+        },
+      );
+
   // --- User ---
 
   @override

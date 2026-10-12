@@ -161,12 +161,18 @@ void main() {
         'baseUrl': null,
         'mqttUrl': null,
         'mqttClientIdPrefix': null,
+        'notificationTitle': null,
+        'notificationContent': null,
       });
     });
 
     test('sends overrides verbatim', () {
       expect(
-        _valid.copyWith(mqttClientIdPrefix: 'fleet-').toMap(),
+        _valid.copyWith(
+          mqttClientIdPrefix: 'fleet-',
+          notificationTitle: 'Track App',
+          notificationContent: 'Tracking active',
+        ).toMap(),
         <String, Object?>{
           'apiKey': 'key',
           'mqttUsername': 'user',
@@ -174,15 +180,41 @@ void main() {
           'baseUrl': 'https://api.example.com/api/v1/',
           'mqttUrl': 'ssl://broker.example.com:8883',
           'mqttClientIdPrefix': 'fleet-',
+          'notificationTitle': 'Track App',
+          'notificationContent': 'Tracking active',
         },
       );
     });
   });
 
-  test('toString redacts the secrets', () {
-    final String text = _valid.toString();
+  test('equality and hashCode cover notification fields', () {
+    final TraceConfig a = _valid.copyWith(
+      notificationTitle: 'Title A',
+      notificationContent: 'Content A',
+    );
+    final TraceConfig b = _valid.copyWith(
+      notificationTitle: 'Title A',
+      notificationContent: 'Content A',
+    );
+    final TraceConfig c = _valid.copyWith(
+      notificationTitle: 'Title B',
+      notificationContent: 'Content A',
+    );
+
+    expect(a, equals(b));
+    expect(a.hashCode, equals(b.hashCode));
+    expect(a, isNot(equals(c)));
+  });
+
+  test('toString redacts the secrets and contains notification fields', () {
+    final String text = _valid.copyWith(
+      notificationTitle: 'Title A',
+      notificationContent: 'Content A',
+    ).toString();
     expect(text, isNot(contains('pass')));
     expect(text, contains('<set>'));
     expect(text, contains('ssl://broker.example.com:8883'));
+    expect(text, contains('Title A'));
+    expect(text, contains('Content A'));
   });
 }
