@@ -718,7 +718,7 @@ void main() {
       expect(user.userId, 'u-1');
     });
 
-    test('BarikoiTrace.startTracking delegates to platform with source', () async {
+    test('BarikoiTrace.startTracking delegates to platform with explicit remote source', () async {
       await BarikoiTrace.startTracking(
         TraceMode.active,
         withTrip: true,
@@ -727,6 +727,101 @@ void main() {
       expect(single().method, 'startTracking');
       expect(args()['withTrip'], isTrue);
       expect(args()['source'], 'REMOTE');
+    });
+
+    test('BarikoiTrace.startTracking defaults to local source', () async {
+      await BarikoiTrace.startTracking(TraceMode.active);
+      expect(single().method, 'startTracking');
+      expect(args()['withTrip'], isFalse);
+      expect(args()['source'], 'LOCAL');
+    });
+
+    test('BarikoiTrace.setNotificationConfig delegates to platform', () async {
+      await BarikoiTrace.setNotificationConfig(
+        title: 'Custom Title',
+        content: 'Custom Content',
+      );
+      expect(single().method, 'setNotificationConfig');
+      expect(args(), <String, Object?>{
+        'title': 'Custom Title',
+        'content': 'Custom Content',
+      });
+    });
+
+    test('BarikoiTrace.setOrCreateUser delegates with phone', () async {
+      final TraceUser user = await BarikoiTrace.setOrCreateUser(
+        phone: '01700000000',
+      );
+      expect(single().method, 'setOrCreateUser');
+      expect(args(), <String, Object?>{
+        'phone': '01700000000',
+      });
+      expect(user.userId, 'u-1');
+    });
+
+    // ignore: deprecated_member_use_from_same_package
+    test('BarikoiTrace.setOrCreateUser deprecated overload forwards phone', () async {
+      final TraceUser user = await BarikoiTrace.setOrCreateUser(
+        name: 'Ignored',
+        email: 'ignored@example.com',
+        phone: '01700000000',
+      );
+      expect(single().method, 'setOrCreateUser');
+      expect(args()['phone'], '01700000000');
+      expect(user.userId, 'u-1');
+    });
+
+    test('BarikoiTrace.getUser delegates to platform', () async {
+      final TraceUser? user = await BarikoiTrace.getUser();
+      expect(single().method, 'getUser');
+      expect(user?.userId, 'u-1');
+    });
+
+    test('BarikoiTrace.getUserId delegates to platform', () async {
+      final String? userId = await BarikoiTrace.getUserId();
+      expect(single().method, 'getUserId');
+      expect(userId, 'u-1');
+    });
+
+    test('BarikoiTrace.isLocationTracking delegates to platform', () async {
+      final bool tracking = await BarikoiTrace.isLocationTracking();
+      expect(single().method, 'isLocationTracking');
+      expect(tracking, isTrue);
+    });
+
+    test('BarikoiTrace.isOnTrip delegates to platform', () async {
+      final bool onTrip = await BarikoiTrace.isOnTrip();
+      expect(single().method, 'isOnTrip');
+      expect(onTrip, isTrue);
+    });
+
+    test('BarikoiTrace.getTripId delegates to platform', () async {
+      final String? tripId = await BarikoiTrace.getTripId();
+      expect(single().method, 'getTripId');
+      expect(tripId, 'trip-1');
+    });
+
+    test('BarikoiTrace.resetUrls delegates to platform', () async {
+      await BarikoiTrace.resetUrls();
+      expect(single().method, 'resetUrls');
+    });
+
+    test('BarikoiTrace.updateUserName propagates TraceException on native error', () async {
+      respond = (MethodCall call) {
+        throw PlatformException(
+          code: 'NO_DATA',
+          message: 'User name cannot be blank',
+        );
+      };
+
+      expect(
+        () => BarikoiTrace.updateUserName('   '),
+        throwsA(
+          isA<TraceException>()
+              .having((TraceException e) => e.code, 'code', 'NO_DATA')
+              .having((TraceException e) => e.message, 'message', contains('blank')),
+        ),
+      );
     });
   });
 }

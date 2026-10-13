@@ -27,7 +27,7 @@ abstract final class Secrets {
   /// broker offers TLS.
   ///
   /// Leave as `null` to accept the SDK's own default.
-  static const String? mqttUrl = 'tcp://broker.trace.bmapsbd.com:1883';
+  static const String mqttUrl = 'tcp://broker.trace.bmapsbd.com:1883';
 
   /// REST base URL. `null` accepts the SDK default
   /// (`https://api.trace.bmapsbd.com/api/v1/`).
