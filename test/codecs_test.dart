@@ -160,6 +160,19 @@ void main() {
       expect(user.updatedAt.millisecondsSinceEpoch, 1700000000000);
     });
 
+    test('decodeUser reads name when present', () {
+      final TraceUser user = Codecs.decodeUser(<Object?, Object?>{
+        'userId': 'u-1',
+        'name': 'Alice',
+        'phone': '01700000000',
+        'updatedAt': 1700000000000,
+      });
+
+      expect(user.userId, 'u-1');
+      expect(user.name, 'Alice');
+      expect(user.phone, '01700000000');
+    });
+
     test('decodeUser tolerates a sparse map', () {
       final TraceUser user =
           Codecs.decodeUser(<Object?, Object?>{'userId': 'u-2'});

@@ -704,4 +704,29 @@ void main() {
       expect(platform.logs.isBroadcast, isTrue);
     });
   });
+
+  group('BarikoiTrace facade', () {
+    test('BarikoiTrace.logout delegates to platform', () async {
+      await BarikoiTrace.logout();
+      expect(single().method, 'logout');
+    });
+
+    test('BarikoiTrace.updateUserName delegates to platform', () async {
+      final TraceUser user = await BarikoiTrace.updateUserName('Alice');
+      expect(single().method, 'updateUserName');
+      expect(args(), <String, Object?>{'name': 'Alice'});
+      expect(user.userId, 'u-1');
+    });
+
+    test('BarikoiTrace.startTracking delegates to platform with source', () async {
+      await BarikoiTrace.startTracking(
+        TraceMode.active,
+        withTrip: true,
+        source: TraceModeSource.remote,
+      );
+      expect(single().method, 'startTracking');
+      expect(args()['withTrip'], isTrue);
+      expect(args()['source'], 'REMOTE');
+    });
+  });
 }
