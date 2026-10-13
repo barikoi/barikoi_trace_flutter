@@ -135,6 +135,8 @@ await BarikoiTrace.initialize(const TraceConfig(
   apiKey: '…',        // Barikoi dashboard
   mqttUsername: '…',  // issued separately, per company
   mqttPassword: '…',
+  notificationTitle: '…',   // optional, Android foreground notification title
+  notificationContent: '…', // optional, Android foreground notification body
 ));
 ```
 
@@ -153,6 +155,8 @@ const TraceConfig config = TraceConfig(
   baseUrl: 'https://api.staging.example.com/api/v1/',
   mqttUrl: 'ssl://broker.staging.example.com:8883',
   mqttClientIdPrefix: 'fleet-flutter-',  // only if the broker ACL matches on client id
+  notificationTitle: 'Fleet Tracker',
+  notificationContent: 'Tracking active shift',
 );
 
 assert(config.warnings.isEmpty, config.warnings.toString());
@@ -166,6 +170,8 @@ await BarikoiTrace.initialize(config);
 | `baseUrl` | `https://api.trace.bmapsbd.com/api/v1/` | trailing slash normalized natively |
 | `mqttUrl` | `tcp://broker.trace.bmapsbd.com:1883` | **plaintext** — see below |
 | `mqttClientIdPrefix` | `AndroidClient-` / `iOSClient-` | per platform |
+| `notificationTitle` | `null` (app name on Android) | foreground service notification title |
+| `notificationContent` | `null` (`"Trace is running as Background service"`) | foreground service notification body |
 
 The three endpoint fields are **nullable in Dart and null by default**, unlike
 their native counterparts. Null means "use whatever the native SDK's own
@@ -209,6 +215,34 @@ afterwards is too late for that first client. Note also that `setBaseUrl` is
 destructive on purpose — a different backend means a different user namespace,
 so the native SDK clears the cached user and stops tracking when the value
 changes. `resetUrls()` does the same.
+
+### Customizing the foreground service notification
+
+On Android, background tracking requires a persistent foreground service with an
+ongoing notification. You can customize the title and body either at initialization
+time via `TraceConfig`:
+
+```dart
+TraceConfig(
+  apiKey: '…',
+  mqttUsername: '…',
+  mqttPassword: '…',
+  notificationTitle: 'My Fleet App',
+  notificationContent: 'Active delivery shift in progress',
+)
+```
+
+or dynamically mid-session using `BarikoiTrace.setNotificationConfig`:
+
+```dart
+await BarikoiTrace.setNotificationConfig(
+  title: 'My Fleet App',
+  content: 'Tracking shift #124',
+);
+```
+
+On iOS, foreground service notifications are not used by the operating system,
+so this call is a safe no-op.
 
 ---
 
@@ -391,6 +425,8 @@ await BarikoiTrace.initialize(const TraceConfig(
   apiKey: String.fromEnvironment('BARIKOI_API_KEY'),
   mqttUsername: String.fromEnvironment('BARIKOI_MQTT_USERNAME'),
   mqttPassword: String.fromEnvironment('BARIKOI_MQTT_PASSWORD'),
+  notificationTitle: 'Trace App',
+  notificationContent: 'Tracking active shift',
 ));
 await BarikoiTrace.setLoggingEnabled(true);
 await BarikoiTrace.setBroadcastingEnabled(true);   // gates locationUpdates
@@ -404,17 +440,23 @@ if (await BarikoiTrace.requestLocationPermissions()) {
 
 // 4. Authenticate. Every upload and the MQTT topic are keyed on this user.
 try {
-  final TraceUser user = await BarikoiTrace.setOrCreateUser(
-    name: 'Jane',
+  TraceUser user = await BarikoiTrace.setOrCreateUser(
     phone: '+8801700000000',
   );
-  debugPrint('signed in as ${user.userId}');
+  debugPrint('signed in as ${user.userId} (${user.name})');
+
+  // Optionally update user display name live on active sessions & MQTT payloads:
+  user = await BarikoiTrace.updateUserName('Jane Doe');
 } on TraceException catch (e) {
   debugPrint('${e.code}: ${e.message}');
 }
 
-// 5. Track.
-await BarikoiTrace.startTracking(TraceMode.active, withTrip: true);
+// 5. Track with mode and source.
+await BarikoiTrace.startTracking(
+  TraceMode.active,
+  withTrip: true,
+  source: TraceModeSource.local,
+);
 
 // 6. Consume live fixes. Broadcast — as many listeners as you like.
 BarikoiTrace.locationUpdates.listen((TraceLocation fix) {
@@ -426,8 +468,11 @@ if (await BarikoiTrace.isBackgroundTrackingDegraded()) {
   // Show a banner. Do not use this to gate startTracking.
 }
 
-// 8. Stop.
+// 8. Stop and logout.
 await BarikoiTrace.stopTracking();
+
+// Clears trip, offline queued fixes, tracking state, and cached credentials:
+await BarikoiTrace.logout();
 ```
 
 Everything on `BarikoiTrace` is static and asynchronous — including calls whose
@@ -446,6 +491,7 @@ Availability column: ✅ both platforms, ⚠️ behaves differently per platform
 | Method | | Notes |
 |---|---|---|
 | `initialize(TraceConfig config)` | ⚠️ | Call once, first. Idempotent. Android configures the SDK in this call; on iOS the SDK was already initialized at launch, so this applies the config (API key included) to the running SDK and persists it — see [Platform setup](#ios). |
+| `setNotificationConfig({String? title, String? content})` | ⚠️ | Configures Android foreground service notification title and content dynamically. Safe no-op on iOS. Can also be set at startup via `TraceConfig`. |
 | `setBaseUrl(String url)` | ✅ | Destructive natively: clears the cached user and stops tracking when the value changes. |
 | `setMqttUrl(String url)` | ✅ | |
 | `setMqttClientIdPrefix(String prefix)` | ✅ | Call before `startTracking`. On iOS the plugin also persists it, because the SDK keeps it in memory only. |
@@ -459,8 +505,10 @@ There is no `setLogListener`: the `logs` stream replaces it.
 | Method | | Notes |
 |---|---|---|
 | `setOrCreateUser({String? name, String? email, required String phone})` → `TraceUser` | ✅ | Looks up by phone, creating if absent. Required before tracking. Also refreshes remote settings as a best-effort side effect that swallows its own failure. |
+| `updateUserName(String name)` → `TraceUser` | ✅ | Updates the tracked user's name live in session storage and on outgoing MQTT location payloads. |
 | `getUser()` → `TraceUser?` | ✅ | Cached, no network. |
 | `getUserId()` → `String?` | ✅ | Cheaper than `getUser`. |
+| `logout()` | ✅ | Full sign-out: ends local trip, cancels tracking, wipes offline stored fixes, resets tracking state, and clears cached user credentials. |
 
 `TraceUser` carries `userId`, `name`, `email`, `phone`, `companyId`, `group`,
 `lastLat`, `lastLon`, `updatedAt` (UTC `DateTime`). `companyId` and `group`
@@ -497,7 +545,7 @@ Two things worth knowing about the `request*` calls:
 | Method | | Notes |
 |---|---|---|
 | `setTraceMode(TraceMode mode)` | ✅ | Applied live when tracking; otherwise at the next `startTracking`. |
-| `startTracking(TraceMode mode, {bool withTrip = false})` | ⚠️ | `withTrip` opens a locally generated trip alongside the session. **Android pre-checks and throws** `NO_USER` / `PERMISSION` where the native call would return silently; iOS starts and lets the SDK report through the log stream. |
+| `startTracking(TraceMode mode, {bool withTrip = false, TraceModeSource source = TraceModeSource.local})` | ⚠️ | `withTrip` opens a locally generated trip alongside the session. `source` selects between `TraceModeSource.local` (host app controls mode) and `TraceModeSource.remote` (fetches and applies remote mode from `GET /sdk/company/settings`). **Android pre-checks and throws** `NO_USER` / `PERMISSION` where the native call would return silently; iOS starts and lets the SDK report through the log stream. |
 | `stopTracking()` | ✅ | Ends the trip too, publishing a final `trip_status: "completed"` payload. |
 | `refreshTracking()` | ⚠️ | Re-applies the stored mode to a running session. `setTraceMode` already does this; use it when the mode changed by another path. iOS calls the facade's own method; Android has none, so the plugin drives `LocTraceManager.refreshTracking()`. |
 | `isLocationTracking()` → `bool` | ✅ | Android reads the real service state, not a stored flag. |
@@ -615,6 +663,10 @@ Each platform also has a background flush of its own: a WorkManager job
 `com.barikoi.trace.offlineflush` on iOS, which is why that identifier has to be
 in your `Info.plist`.
 
+When switching users or logging out, `BarikoiTrace.logout()` purges the offline
+database completely to prevent queued records from leaking into the next user's
+session.
+
 ---
 
 ## Error handling
@@ -719,6 +771,7 @@ By design, not oversight.
 | `isBackgroundTrackingDegraded` | Computed by the plugin | The SDK's own signal |
 | Mock-location detection | `Location.isMock` | Only software-simulated locations it can detect |
 | Missing-`Activity` failure | `NO_ACTIVITY` | Not applicable |
+| Foreground notification | Ongoing persistent notification (customizable title & content) | Not applicable |
 | Secret storage | `EncryptedSharedPreferences` | Keychain |
 | Default client-id prefix | `AndroidClient-` | `iOSClient-` |
 
