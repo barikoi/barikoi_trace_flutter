@@ -109,6 +109,7 @@ class _TraceDemoPageState extends State<TraceDemoPage>
   final TextEditingController _apiKey = TextEditingController(text: kApiKey);
   final TextEditingController _phone =
       TextEditingController(text: '01700032522');
+  final TextEditingController _name = TextEditingController();
   final TextEditingController _notificationTitle = TextEditingController();
   final TextEditingController _notificationContent = TextEditingController();
   bool _apiKeyObscured = false;
@@ -122,6 +123,7 @@ class _TraceDemoPageState extends State<TraceDemoPage>
 
   TraceUser? _user;
   ModeChoice _modeChoice = ModeChoice.active;
+  TraceModeSource _modeSource = TraceModeSource.local;
   bool _withTrip = false;
   bool _tracking = false;
   String? _tripId;
@@ -168,6 +170,7 @@ class _TraceDemoPageState extends State<TraceDemoPage>
     unawaited(_locationSubscription?.cancel());
     unawaited(_logSubscription?.cancel());
     _phone.dispose();
+    _name.dispose();
     _notificationTitle.dispose();
     _notificationContent.dispose();
     _logScroll.dispose();
@@ -363,8 +366,13 @@ class _TraceDemoPageState extends State<TraceDemoPage>
         _user = user;
         _tracking = tracking;
         _tripId = tripId;
-        if (user != null && user.phone != null) {
-          _phone.text = user.phone!;
+        if (user != null) {
+          if (user.phone != null) {
+            _phone.text = user.phone!;
+          }
+          if (user.name != null) {
+            _name.text = user.name!;
+          }
         }
       });
     } on TraceException catch (e) {
@@ -430,6 +438,7 @@ class _TraceDemoPageState extends State<TraceDemoPage>
       if (!mounted) return;
       setState(() {
         _user = user;
+        if (user.name != null) _name.text = user.name!;
         _status = 'Signed in as ${user.userId}.';
       });
       _appendLocalLog(
@@ -437,6 +446,46 @@ class _TraceDemoPageState extends State<TraceDemoPage>
         'Example',
         'User ${user.userId} · company ${user.companyId} · group ${user.group}',
       );
+    });
+  }
+
+  Future<void> _updateUserName() async {
+    final String name = _name.text.trim();
+    if (name.isEmpty) {
+      _snack('Enter a name to update.');
+      return;
+    }
+    await _run('updateUserName', () async {
+      final TraceUser updated = await BarikoiTrace.updateUserName(name);
+      if (!mounted) return;
+      setState(() {
+        _user = updated;
+        _status = 'User name updated to "${updated.name}".';
+      });
+      _appendLocalLog(
+        'INFO',
+        'Example',
+        'User name updated live to "${updated.name}"',
+      );
+    });
+  }
+
+  Future<void> _logout() async {
+    await _run('logout', () async {
+      await BarikoiTrace.logout();
+      if (!mounted) return;
+      setState(() {
+        _user = null;
+        _tracking = false;
+        _tripId = null;
+        _status = 'Logged out. Local credentials and offline fixes cleared.';
+      });
+      _appendLocalLog(
+        'INFO',
+        'Example',
+        'Logged out: tracking stopped, local trip ended, offline queue purged.',
+      );
+      await _refreshEverything();
     });
   }
 
@@ -450,7 +499,11 @@ class _TraceDemoPageState extends State<TraceDemoPage>
     }
 
     await _run('startTracking', () async {
-      await BarikoiTrace.startTracking(_modeChoice.mode, withTrip: _withTrip);
+      await BarikoiTrace.startTracking(
+        _modeChoice.mode,
+        withTrip: _withTrip,
+        source: _modeSource,
+      );
       await _refreshTrackingState();
       await _refreshPermissions();
     });
@@ -835,23 +888,52 @@ class _TraceDemoPageState extends State<TraceDemoPage>
 
   Widget _signInCard() {
     return _section(
-      title: '2 · Sign in',
+      title: '2 · Sign in & User',
       children: <Widget>[
         TextField(
           controller: _phone,
           decoration: const InputDecoration(labelText: 'Phone (required)'),
           keyboardType: TextInputType.phone,
         ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _name,
+          decoration: const InputDecoration(
+            labelText: 'User display name (optional)',
+            hintText: 'e.g. Jane Doe',
+          ),
+        ),
         const SizedBox(height: 12),
-        FilledButton(
-          onPressed:
-              _initialized && !_busy ? () => unawaited(_signIn()) : null,
-          child: const Text('Sign in / create user'),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: FilledButton(
+                onPressed:
+                    _initialized && !_busy ? () => unawaited(_signIn()) : null,
+                child: const Text('Sign in / create user'),
+              ),
+            ),
+            if (_user != null) ...<Widget>[
+              const SizedBox(width: 8),
+              OutlinedButton(
+                onPressed: !_busy ? () => unawaited(_updateUserName()) : null,
+                child: const Text('Update name'),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.redAccent,
+                ),
+                onPressed: !_busy ? () => unawaited(_logout()) : null,
+                child: const Text('Log out'),
+              ),
+            ],
+          ],
         ),
         if (_user != null) ...<Widget>[
           const SizedBox(height: 12),
           Text(
-            'userId ${_user!.userId}\n'
+            'userId ${_user!.userId} · name ${_user!.name ?? '—'}\n'
             'company ${_user!.companyId ?? '—'} · group ${_user!.group ?? '—'}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
@@ -865,8 +947,7 @@ class _TraceDemoPageState extends State<TraceDemoPage>
       title: '3 · Tracking',
       children: <Widget>[
         DropdownButtonFormField<ModeChoice>(
-          // `value:` rather than the newer `initialValue:` — this example's
-          // pubspec allows Flutter 3.22, which does not have the latter yet.
+          // ignore: deprecated_member_use
           value: _modeChoice,
           decoration: const InputDecoration(labelText: 'Mode'),
           items: ModeChoice.values
@@ -885,6 +966,27 @@ class _TraceDemoPageState extends State<TraceDemoPage>
         Text(
           _modeChoice.description,
           style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<TraceModeSource>(
+          // ignore: deprecated_member_use
+          value: _modeSource,
+          decoration: const InputDecoration(labelText: 'Mode source'),
+          items: const <DropdownMenuItem<TraceModeSource>>[
+            DropdownMenuItem(
+              value: TraceModeSource.local,
+              child: Text('Local (Host app defines mode)'),
+            ),
+            DropdownMenuItem(
+              value: TraceModeSource.remote,
+              child: Text('Remote (Synced from server settings)'),
+            ),
+          ],
+          onChanged: _tracking || _busy
+              ? null
+              : (TraceModeSource? source) {
+                  if (source != null) setState(() => _modeSource = source);
+                },
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
