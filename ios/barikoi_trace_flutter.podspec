@@ -9,7 +9,7 @@
 # The BarikoiTrace iOS SDK (https://github.com/barikoi/BarikoiTrace-ios-sdk)
 # ships as a **Swift Package only**: its repository contains a `Package.swift`
 # and no `BarikoiTrace.podspec`, and nothing is published to the CocoaPods
-# trunk. So `s.dependency 'BarikoiTrace', '0.4.1'` cannot resolve out of the
+# trunk. So `s.dependency 'BarikoiTrace', '0.7.0'` cannot resolve out of the
 # box — `pod install` will fail with "Unable to find a specification for
 # `BarikoiTrace`".
 #
@@ -31,7 +31,7 @@
 #          target 'Runner' do
 #            use_frameworks!
 #            pod 'BarikoiTrace',
-#                :podspec => 'https://raw.githubusercontent.com/barikoi/BarikoiTrace-ios-sdk/0.4.1/BarikoiTrace.podspec'
+#                :podspec => 'https://raw.githubusercontent.com/barikoi/BarikoiTrace-ios-sdk/0.7.0/BarikoiTrace.podspec'
 #            # …or from a local checkout / fork:
 #            # pod 'BarikoiTrace', :podspec => '../../BarikoiTrace-ios-sdk/BarikoiTrace.podspec'
 #            flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
@@ -69,7 +69,7 @@ and for the SDK's internal debug log.
   }
 
   s.dependency 'Flutter'
-  s.dependency 'BarikoiTrace', '0.4.1'
+  s.dependency 'BarikoiTrace', '0.7.0'
 
   s.platform          = :ios, '15.0'
   s.ios.deployment_target = '15.0'

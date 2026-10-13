@@ -8,12 +8,12 @@ fixes to disk when the network is gone, flushing them when it returns.
 This package is a **binding, not an implementation**. Tracking runs entirely in
 the native SDKs — [`barikoitrace`](https://github.com/barikoi/BarikoiTrace-android-sdk)
 on Android and [`BarikoiTrace`](https://github.com/barikoi/BarikoiTrace-ios-sdk)
-on iOS, both at `0.4.1` — and Dart drives them over one method channel and two
+on iOS, both at `0.7.0` — and Dart drives them over one method channel and two
 event channels. Nothing about tracking depends on the Flutter engine being
 alive; see [Background execution](#background-execution--read-this-before-shipping).
 
 - **Requirements:** Flutter 3.22+, Dart 3.4+, Android minSdk 24 / compileSdk 35 / Kotlin 2.0+ / Java 8 desugaring, iOS 15+
-- **Wraps:** native SDK `0.4.1` on both platforms (`BarikoiTrace.nativeSdkVersion`)
+- **Wraps:** native SDK `0.7.0` on both platforms (`BarikoiTrace.nativeSdkVersion`)
 - **License:** MIT
 
 ---
@@ -83,7 +83,7 @@ dependencyResolutionManagement {
 ```
 
 Without it, the build fails to resolve
-`com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.1`. The first build of a tag is compiled
+`com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.7.0`. The first build of a tag is compiled
 by JitPack on demand and takes a few minutes; later builds come from its cache.
 
 ### iOS — Swift Package Manager, or a podspec you supply
@@ -100,10 +100,10 @@ flutter config --enable-swift-package-manager
 ```
 
 The plugin's `ios/barikoi_trace_flutter/Package.swift` then declares the SDK
-dependency and resolves `BarikoiTrace` 0.4.1 with no CocoaPods involvement.
+dependency and resolves `BarikoiTrace` 0.7.0 with no CocoaPods involvement.
 
 **On CocoaPods** the plugin's podspec declares
-`s.dependency 'BarikoiTrace', '0.4.1'`, which cannot resolve out of the box —
+`s.dependency 'BarikoiTrace', '0.7.0'`, which cannot resolve out of the box —
 `pod install` fails with *"Unable to find a specification for `BarikoiTrace`"*.
 Until a podspec is published, point at one from your own `ios/Podfile`, where a
 host-app declaration takes precedence:
@@ -112,7 +112,7 @@ host-app declaration takes precedence:
 target 'Runner' do
   use_frameworks!
   pod 'BarikoiTrace',
-      :podspec => 'https://raw.githubusercontent.com/barikoi/BarikoiTrace-ios-sdk/0.4.1/BarikoiTrace.podspec'
+      :podspec => 'https://raw.githubusercontent.com/barikoi/BarikoiTrace-ios-sdk/0.7.0/BarikoiTrace.podspec'
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 ```
@@ -496,7 +496,7 @@ Availability column: ✅ both platforms, ⚠️ behaves differently per platform
 | `setMqttUrl(String url)` | ✅ | |
 | `setMqttClientIdPrefix(String prefix)` | ✅ | Call before `startTracking`. On iOS the plugin also persists it, because the SDK keeps it in memory only. |
 | `resetUrls()` | ✅ | Back to the native defaults. |
-| `BarikoiTrace.nativeSdkVersion` | ✅ | `'0.4.1'` — the native version this release is built against. |
+| `BarikoiTrace.nativeSdkVersion` | ✅ | `'0.7.0'` — the native version this release is built against. |
 
 There is no `setLogListener`: the `logs` stream replaces it.
 
@@ -805,8 +805,8 @@ See [`example/README.md`](example/README.md).
 | | |
 |---|---|
 | Plugin | `0.1.0` |
-| Android SDK | `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.1` |
-| iOS SDK | `BarikoiTrace` Swift package `0.4.1` |
+| Android SDK | `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.7.0` |
+| iOS SDK | `BarikoiTrace` Swift package `0.7.0` |
 
 The two native SDKs are released **in lockstep on the same version number** —
 one number identifies a matched pair, which is what makes a single wrapper

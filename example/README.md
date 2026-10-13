@@ -140,7 +140,7 @@ These files are hand-authored and carry settings a fresh `flutter create` does
 | File | Why it is not the default |
 |---|---|
 | `android/app/build.gradle` | `minSdk 24`, `coreLibraryDesugaringEnabled = true` and the `desugar_jdk_libs` dependency. Desugaring is **not** transitive — the native SDK uses `java.time.LocalTime` at minSdk 24, so the *application* module must desugar too or the app crashes with `NoClassDefFoundError: java.time.LocalTime` the first time a `TraceMode` is built. |
-| `android/build.gradle` | The JitPack repository. `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.4.1` does not resolve without it. |
+| `android/build.gradle` | The JitPack repository. `com.github.barikoi.BarikoiTrace-android-sdk:barikoitrace:0.7.0` does not resolve without it. |
 | `android/settings.gradle` | Kotlin 2.0.21. The native SDK is compiled with Kotlin 2.0, and 1.9.x refuses to read its metadata. |
 | `android/app/src/main/AndroidManifest.xml` | The app's own location, background-location, foreground-service and notification permissions. |
 | `ios/Runner/Info.plist` | The two usage descriptions, `UIBackgroundModes`, `BGTaskSchedulerPermittedIdentifiers`, and the optional `BarikoiTraceApiKey` the plugin reads at launch. |
@@ -164,7 +164,7 @@ flutter config --enable-swift-package-manager
 ```
 
 The plugin's `ios/barikoi_trace_flutter/Package.swift` then resolves
-`BarikoiTrace` 0.4.1 for you. On CocoaPods you must supply a podspec yourself —
+`BarikoiTrace` 0.7.0 for you. On CocoaPods you must supply a podspec yourself —
 the Podfile explains how.
 
 ---

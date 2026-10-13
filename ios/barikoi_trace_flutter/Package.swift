@@ -38,7 +38,7 @@ let package = Package(
         // contract's version pin (§8) says the two move together.
         .package(
             url: "https://github.com/barikoi/BarikoiTrace-ios-sdk.git",
-            exact: "0.4.1"
+            exact: "0.7.0"
         )
     ],
     targets: [

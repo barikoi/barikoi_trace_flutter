@@ -37,7 +37,7 @@ import 'platform_specific/ios_api.dart';
 abstract final class BarikoiTrace {
   /// The native SDK version this plugin release is built and tested against,
   /// on both Android and iOS.
-  static const String nativeSdkVersion = '0.4.1';
+  static const String nativeSdkVersion = '0.7.0';
 
   static BarikoiTracePlatform get _platform => BarikoiTracePlatform.instance;
 

@@ -525,6 +525,6 @@ complete an already-completed result.
 
 ## 8. Version pin
 
-The Dart layer exposes `BarikoiTrace.nativeSdkVersion = '0.4.1'`. Both native
+The Dart layer exposes `BarikoiTrace.nativeSdkVersion = '0.7.0'`. Both native
 implementations must depend on that version of their respective SDK. Bump the
 constant and this line together.
