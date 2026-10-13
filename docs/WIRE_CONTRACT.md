@@ -57,7 +57,7 @@ Rules that hold everywhere:
 
 ## 3. Method channel — the complete method list
 
-Exactly 34 methods. The names are the literal strings passed to
+Exactly 36 methods. The names are the literal strings passed to
 `MethodChannel.invokeMethod`.
 
 ```
@@ -69,6 +69,8 @@ resetUrls
 setOrCreateUser
 getUser
 getUserId
+logout
+updateUserName
 isLocationPermissionsGranted
 isLocationSettingsOn
 hasBackgroundPermission
@@ -147,9 +149,11 @@ concern with no channel method.
 | `setOrCreateUser` | `{ "name": string?, "email": string?, "phone": string }` | `TraceUser` map (§4.2), non-null |
 | `getUser` | none | `TraceUser` map, or `null` when no user is set |
 | `getUserId` | none | `string`, or `null` |
+| `logout` | none | `null` |
+| `updateUserName` | `{ "name": string }` | `TraceUser` map (§4.2), non-null |
 
 `setOrCreateUser` returning `null` is a contract violation; the Dart side
-raises `TraceException(NO_DATA)` if it happens.
+raises `TraceException(NO_DATA)` if it happens. Same for `updateUserName`.
 
 ### 3.3 Permissions & settings
 
@@ -208,7 +212,7 @@ returning `false`.
 | Method | Arguments | Result |
 | --- | --- | --- |
 | `setTraceMode` | `{ "mode": TraceMode map (§4.3) }` | `null` |
-| `startTracking` | `{ "mode": TraceMode map, "withTrip": bool }` | `null` |
+| `startTracking` | `{ "mode": TraceMode map, "withTrip": bool, "source": string? }` | `null` |
 | `stopTracking` | none | `null` |
 | `refreshTracking` | none | `null` |
 | `isLocationTracking` | none | `bool` |
@@ -218,6 +222,8 @@ returning `false`.
 
 `withTrip` is always present — the Dart side defaults it to `false` and never
 omits the key.
+
+`source` is `"LOCAL"` or `"REMOTE"` — defaults to `"LOCAL"` when omitted or null.
 
 `refreshTracking` maps to `BarikoiTrace.refreshTracking()` on iOS. Android's
 facade has no such method; call `LocTraceManager.refreshTracking()`, or

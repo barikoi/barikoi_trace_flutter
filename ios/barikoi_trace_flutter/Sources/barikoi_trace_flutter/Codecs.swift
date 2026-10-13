@@ -196,6 +196,7 @@ enum Codecs {
     static func encodeUser(_ user: TraceUser) -> [String: Any] {
         [
             "userId": user.userId,
+            "name": wire(user.name),
             "phone": wire(user.phone),
             "companyId": wire(user.companyId),
             "group": wire(user.group),

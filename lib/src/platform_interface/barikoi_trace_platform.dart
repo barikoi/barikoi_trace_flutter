@@ -5,6 +5,7 @@ import '../models/trace_config.dart';
 import '../models/trace_location.dart';
 import '../models/trace_log_entry.dart';
 import '../models/trace_mode.dart';
+import '../models/trace_mode_source.dart';
 import '../models/trace_user.dart';
 
 /// The interface every platform implementation of `barikoi_trace_flutter`
@@ -96,6 +97,16 @@ abstract class BarikoiTracePlatform extends PlatformInterface {
     throw UnimplementedError('getUserId() has not been implemented.');
   }
 
+  /// See `BarikoiTrace.logout`.
+  Future<void> logout() {
+    throw UnimplementedError('logout() has not been implemented.');
+  }
+
+  /// See `BarikoiTrace.updateUserName`.
+  Future<TraceUser> updateUserName(String name) {
+    throw UnimplementedError('updateUserName() has not been implemented.');
+  }
+
   // --- Permissions & settings ---
 
   /// See `BarikoiTrace.isLocationPermissionsGranted`.
@@ -158,7 +169,11 @@ abstract class BarikoiTracePlatform extends PlatformInterface {
   }
 
   /// See `BarikoiTrace.startTracking`.
-  Future<void> startTracking(TraceMode mode, {bool withTrip = false}) {
+  Future<void> startTracking(
+    TraceMode mode, {
+    bool withTrip = false,
+    TraceModeSource source = TraceModeSource.local,
+  }) {
     throw UnimplementedError('startTracking() has not been implemented.');
   }
 

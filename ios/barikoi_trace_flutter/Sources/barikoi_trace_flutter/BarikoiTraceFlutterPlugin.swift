@@ -241,6 +241,25 @@ public final class BarikoiTraceFlutterPlugin: NSObject, FlutterPlugin {
                 result(nil)
             }
 
+        case "logout":
+            BarikoiTrace.logout()
+            result(nil)
+
+        case "updateUserName":
+            guard let name = Codecs.string(args["name"]) else {
+                result(missingArgument("name", call.method))
+                return
+            }
+            let box = ResultBox(result)
+            Task {
+                do {
+                    let user = try await BarikoiTrace.updateUserName(name)
+                    box.succeed(Codecs.encodeUser(user))
+                } catch {
+                    box.fail(error)
+                }
+            }
+
         // MARK: Permissions & settings
 
         case "isLocationPermissionsGranted":
@@ -309,9 +328,12 @@ public final class BarikoiTraceFlutterPlugin: NSObject, FlutterPlugin {
                 ))
                 return
             }
+            let rawSource = Codecs.string(args["source"])?.uppercased()
+            let source: TraceModeSource = (rawSource == "REMOTE") ? .remote : .local
             BarikoiTrace.startTracking(
                 Codecs.decodeMode(args["mode"]),
-                withTrip: Codecs.bool(args["withTrip"], false)
+                withTrip: Codecs.bool(args["withTrip"], false),
+                source: source
             )
             result(nil)
 

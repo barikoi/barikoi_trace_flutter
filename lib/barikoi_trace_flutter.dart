@@ -18,6 +18,7 @@ export 'src/models/trace_mode.dart'
         TraceModeBuilder,
         TraceTimeOfDay,
         TrackingMode;
+export 'src/models/trace_mode_source.dart' show TraceModeSource;
 export 'src/models/trace_mqtt_state.dart' show TraceMqttState;
 export 'src/models/trace_user.dart' show TraceUser;
 export 'src/platform_interface/barikoi_trace_platform.dart'

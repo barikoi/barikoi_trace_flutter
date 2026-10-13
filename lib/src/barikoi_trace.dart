@@ -2,6 +2,7 @@ import 'models/trace_config.dart';
 import 'models/trace_location.dart';
 import 'models/trace_log_entry.dart';
 import 'models/trace_mode.dart';
+import 'models/trace_mode_source.dart';
 import 'models/trace_user.dart';
 import 'platform_interface/barikoi_trace_platform.dart';
 import 'platform_specific/android_api.dart';
@@ -111,6 +112,14 @@ abstract final class BarikoiTrace {
   /// all you need.
   static Future<String?> getUserId() => _platform.getUserId();
 
+  /// Logs out the user. Clears all user-scoped data, offline cached fixes,
+  /// and terminates active tracking sessions and trips.
+  static Future<void> logout() => _platform.logout();
+
+  /// Updates the user's name on the local session and MQTT publisher metadata.
+  static Future<TraceUser> updateUserName(String name) =>
+      _platform.updateUserName(name);
+
   // --- Permissions & settings ---
 
   /// Whether foreground location permission is granted.
@@ -174,11 +183,16 @@ abstract final class BarikoiTrace {
   ///
   /// Pass `withTrip: true` to open a trip alongside the session, which groups
   /// the fixes server-side and makes [getTripId] non-null.
+  ///
+  /// Pass [source] to specify whether tracking configuration is managed locally
+  /// ([TraceModeSource.local]) or queried and kept in sync with the remote server
+  /// ([TraceModeSource.remote]).
   static Future<void> startTracking(
     TraceMode mode, {
     bool withTrip = false,
+    TraceModeSource source = TraceModeSource.local,
   }) =>
-      _platform.startTracking(mode, withTrip: withTrip);
+      _platform.startTracking(mode, withTrip: withTrip, source: source);
 
   /// Stops tracking and, if one is open, ends the trip.
   static Future<void> stopTracking() => _platform.stopTracking();

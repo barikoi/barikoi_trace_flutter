@@ -8,6 +8,7 @@ class TraceUser {
   /// Creates a user.
   TraceUser({
     required this.userId,
+    this.name,
     this.phone,
     this.companyId,
     this.group,
@@ -19,6 +20,9 @@ class TraceUser {
   /// Barikoi-issued user id. The MQTT client id and every upload are keyed on
   /// this.
   final String userId;
+
+  /// User name, if set or returned by the backend.
+  final String? name;
 
   /// Phone number — the identity `setOrCreateUser` looks up on.
   final String? phone;
@@ -47,6 +51,7 @@ class TraceUser {
   static TraceUser fromMap(Map<String, Object?> map) {
     return TraceUser(
       userId: map['userId'] is String ? map['userId']! as String : '',
+      name: map['name'] is String ? map['name']! as String : null,
       phone: map['phone'] is String ? map['phone']! as String : null,
       companyId: map['companyId'] is String ? map['companyId']! as String : null,
       group: map['group'] is String ? map['group']! as String : null,
@@ -63,6 +68,7 @@ class TraceUser {
   /// plugin never sends a user to the platform side.
   Map<String, Object?> toMap() => <String, Object?>{
         'userId': userId,
+        'name': name,
         'phone': phone,
         'companyId': companyId,
         'group': group,
@@ -72,7 +78,7 @@ class TraceUser {
       };
 
   @override
-  String toString() => 'TraceUser(userId: $userId, phone: $phone, '
+  String toString() => 'TraceUser(userId: $userId, name: $name, phone: $phone, '
       'companyId: $companyId, group: $group, '
       'lastLat: $lastLat, lastLon: $lastLon, updatedAt: $updatedAt)';
 
@@ -81,6 +87,7 @@ class TraceUser {
       identical(this, other) ||
       other is TraceUser &&
           other.userId == userId &&
+          other.name == name &&
           other.phone == phone &&
           other.companyId == companyId &&
           other.group == group &&
@@ -91,6 +98,7 @@ class TraceUser {
   @override
   int get hashCode => Object.hash(
         userId,
+        name,
         phone,
         companyId,
         group,

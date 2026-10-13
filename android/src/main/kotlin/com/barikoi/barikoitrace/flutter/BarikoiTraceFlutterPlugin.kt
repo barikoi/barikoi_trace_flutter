@@ -15,9 +15,11 @@ import com.barikoi.barikoitrace.BarikoiTrace
 import com.barikoi.barikoitrace.LocTraceManager
 import com.barikoi.barikoitrace.TraceConfig
 import com.barikoi.barikoitrace.TraceMode
+import com.barikoi.barikoitrace.TraceModeSource
 import com.barikoi.barikoitrace.model.TraceError
 import com.barikoi.barikoitrace.model.TraceException
 import com.barikoi.barikoitrace.model.TraceUser
+import java.util.Locale
 import com.barikoi.barikoitrace.util.SystemSettingsManager
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -333,6 +335,17 @@ class BarikoiTraceFlutterPlugin :
                 result.success(io { BarikoiTrace.getUserId() })
             }
 
+            "logout" -> {
+                io { BarikoiTrace.logout() }
+                result.success(null)
+            }
+
+            "updateUserName" -> {
+                val name = requireStringArg(call, "name")
+                val user = io { BarikoiTrace.updateUserName(name) }
+                result.success(Codecs.encodeUser(user))
+            }
+
             // --- Permissions & settings (§3.3) ---
 
             "isLocationPermissionsGranted" -> {
@@ -377,9 +390,15 @@ class BarikoiTraceFlutterPlugin :
             }
 
             "startTracking" -> {
+                val rawSource = call.argument<String>("source")
+                val source = when (rawSource?.uppercase(Locale.US)) {
+                    "REMOTE" -> TraceModeSource.REMOTE
+                    else -> TraceModeSource.LOCAL
+                }
                 startTracking(
                     mode = Codecs.decodeMode(call.argument<Any>("mode")),
-                    withTrip = Codecs.asBool(call.argument<Any>("withTrip"), false)
+                    withTrip = Codecs.asBool(call.argument<Any>("withTrip"), false),
+                    source = source
                 )
                 result.success(null)
             }
@@ -604,7 +623,7 @@ class BarikoiTraceFlutterPlugin :
      * indistinguishable from success: the future completes, no fixes ever
      * arrive. Pre-check and raise the SDK's own error codes instead.
      */
-    private suspend fun startTracking(mode: TraceMode, withTrip: Boolean) {
+    private suspend fun startTracking(mode: TraceMode, withTrip: Boolean, source: TraceModeSource) {
         val userId = io { BarikoiTrace.getUserId() }
         if (userId.isNullOrBlank()) throw TraceException(TraceError.noUserError())
 
@@ -623,7 +642,7 @@ class BarikoiTraceFlutterPlugin :
         // The SDK re-reads the user id and enqueues the DataStore writes itself;
         // keep it off the main thread all the same, since both of those touch
         // the encrypted store synchronously on the calling thread.
-        io { BarikoiTrace.startTracking(mode, withTrip) }
+        io { BarikoiTrace.startTracking(mode, withTrip, source) }
     }
 
     // ------------------------------------------------------------------
@@ -942,6 +961,8 @@ class BarikoiTraceFlutterPlugin :
             "setBroadcastingEnabled",
             "isOnTrip",
             "getTripId",
+            "logout",
+            "updateUserName",
             "updateCurrentLocation",
             "uploadOfflineData",
             "getSettingsFromRemote",

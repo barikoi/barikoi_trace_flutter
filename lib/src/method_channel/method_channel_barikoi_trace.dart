@@ -8,6 +8,7 @@ import '../models/trace_exception.dart';
 import '../models/trace_location.dart';
 import '../models/trace_log_entry.dart';
 import '../models/trace_mode.dart';
+import '../models/trace_mode_source.dart';
 import '../models/trace_user.dart';
 import '../platform_interface/barikoi_trace_platform.dart';
 import 'codecs.dart';
@@ -140,6 +141,24 @@ class MethodChannelBarikoiTrace extends BarikoiTracePlatform {
   @override
   Future<String?> getUserId() => _invoke<String>('getUserId');
 
+  @override
+  Future<void> logout() => _invoke<Object>('logout');
+
+  @override
+  Future<TraceUser> updateUserName(String name) async {
+    final Map<Object?, Object?>? result =
+        await _invoke<Map<Object?, Object?>>('updateUserName', <String, Object?>{
+      'name': name,
+    });
+    if (result == null) {
+      throw const TraceException(
+        code: TraceErrorCode.noData,
+        message: 'updateUserName returned no user.',
+      );
+    }
+    return Codecs.decodeUser(result);
+  }
+
   // --- Permissions & settings ---
 
   @override
@@ -183,10 +202,15 @@ class MethodChannelBarikoiTrace extends BarikoiTracePlatform {
       );
 
   @override
-  Future<void> startTracking(TraceMode mode, {bool withTrip = false}) =>
+  Future<void> startTracking(
+    TraceMode mode, {
+    bool withTrip = false,
+    TraceModeSource source = TraceModeSource.local,
+  }) =>
       _invoke<Object>('startTracking', <String, Object?>{
         'mode': Codecs.encodeMode(mode),
         'withTrip': withTrip,
+        'source': source.toWire(),
       });
 
   @override

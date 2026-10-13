@@ -62,6 +62,7 @@ void main() {
     switch (call.method) {
       case 'setOrCreateUser':
       case 'getUser':
+      case 'updateUserName':
         return _userMap;
       case 'getUserId':
         return 'u-1';
@@ -264,6 +265,36 @@ void main() {
       respond = (MethodCall call) => null;
       expect(await platform.getUserId(), isNull);
     });
+
+    test('logout takes no arguments', () async {
+      await platform.logout();
+      expect(single().method, 'logout');
+      expect(single().arguments, isNull);
+    });
+
+    test('updateUserName sends name and decodes the updated user', () async {
+      respond = (MethodCall call) => <String, Object?>{
+        'userId': 'u-1',
+        'name': 'Updated User',
+        'updatedAt': 1700000000000,
+      };
+      final TraceUser user = await platform.updateUserName('Updated User');
+      expect(single().method, 'updateUserName');
+      expect(args(), <String, Object?>{'name': 'Updated User'});
+      expect(user.userId, 'u-1');
+      expect(user.name, 'Updated User');
+    });
+
+    test('updateUserName throws NO_DATA when the platform returns null', () async {
+      respond = (MethodCall call) => null;
+      await expectLater(
+        platform.updateUserName('Updated User'),
+        throwsA(
+          isA<TraceException>()
+              .having((TraceException e) => e.code, 'code', 'NO_DATA'),
+        ),
+      );
+    });
   });
 
   group('permissions & settings', () {
@@ -315,16 +346,26 @@ void main() {
       );
     });
 
-    test('startTracking defaults withTrip to false', () async {
+    test('startTracking defaults withTrip to false and source to LOCAL', () async {
       await platform.startTracking(TraceMode.active);
       expect(single().method, 'startTracking');
       expect(args()['withTrip'], isFalse);
+      expect(args()['source'], 'LOCAL');
       expect(Codecs.asWireMap(args()['mode']), TraceMode.active.toMap());
     });
 
     test('startTracking passes withTrip through', () async {
       await platform.startTracking(TraceMode.active, withTrip: true);
       expect(args()['withTrip'], isTrue);
+      expect(args()['source'], 'LOCAL');
+    });
+
+    test('startTracking passes source through', () async {
+      await platform.startTracking(
+        TraceMode.active,
+        source: TraceModeSource.remote,
+      );
+      expect(args()['source'], 'REMOTE');
     });
 
     test('startTracking preserves the null time sentinel', () async {
